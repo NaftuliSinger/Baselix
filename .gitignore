@@ -13,6 +13,3 @@ bin/
 
 # logs
 *.log
-
-# templ
-*_templ.go
