@@ -2,6 +2,7 @@ package components
 
 import (
     "baselix/internal/models"
+    "fmt"
 )
 
 templ ProjectInlineForm(){
@@ -38,6 +39,7 @@ templ ProjectInlineForm(){
         <!-- New project response will be injected here -->
     </div>
 }
+
 templ NewProjectResponse(apikey string) {
     <div 
         x-data="{ open: true, copied: false }"
@@ -86,10 +88,11 @@ templ NewProjectResponse(apikey string) {
                         copied = true;
                         setTimeout(() => copied = false, 2000);
                     "
-                    class="ml-3 px-3 py-1 text-xs font-medium bg-gray-200 hover:bg-gray-300 rounded-md transition"
+                    class="ml-3 px-3 py-1 text-xs font-medium rounded-md transition flex items-center justify-center min-w-[64px] h-6"
+                    :class="copied ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'"
                 >
                     <span x-show="!copied">Copy</span>
-                    <span x-show="copied">Copied ✓</span>
+                    <span x-show="copied">✓</span>
                 </button>
             </div>
 
@@ -108,25 +111,6 @@ templ NewProjectResponse(apikey string) {
                 </button>
             </div>
         </div>
-    </div>
-}
-
-templ ProjectCard(project models.Project) {
-    <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition">
-        <h2 class="text-lg font-semibold text-gray-800 mb-1">
-            { project.Name }
-        </h2>
-
-        <p class="text-sm text-gray-500 mb-4 line-clamp-3">
-            { project.Description }
-        </p>
-
-        <a 
-            href="/projects/{ project.ID }" 
-            class="text-indigo-600 text-sm font-medium hover:underline"
-        >
-            View Details →
-        </a>
     </div>
 }
 
@@ -151,10 +135,13 @@ templ ProjectTable(projects []models.Project) {
                         </td>
                         <td class="px-4 py-2 text-right">
                             <a 
-                                href="/projects/{ project.ID }"
-                                class="text-indigo-600 hover:underline text-sm"
+                                class="text-indigo-600 text-sm font-medium hover:underline"
+                                hx-post={fmt.Sprintf("/projects/%s/rotate-key", project.ID)}
+                                hx-target="#modal-root"
+                                hx-swap="innerHTML"
+                                hx-confirm="Are you sure you want to rotate the API key? This will invalidate the current key immediately."
                             >
-                                View
+                                Rotate API Key
                             </a>
                         </td>
                     </tr>

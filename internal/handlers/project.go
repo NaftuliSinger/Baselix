@@ -48,6 +48,38 @@ func CreateProjectHTML(c *gin.Context) {
 	)
 }
 
+func RotateAPIKeyHTML(c *gin.Context) {
+	projectID := c.Param("id")
+	var project models.Project
+
+	if err := db.DB.NewSelect().Model(&project).Where("id = ?", projectID).Scan(c); err != nil {
+		utils.RenderHTML(c,
+			http.StatusOK,
+			components.Message(
+				"Error fetching project: "+err.Error(),
+				"error",
+			))
+		return
+	}
+
+	project.APIKeyHash, _ = utils.GenerateHashedAPIKey()
+
+	if _, err := db.DB.NewUpdate().Model(&project).Where("id = ?", projectID).Exec(c); err != nil {
+		utils.RenderHTML(c,
+			http.StatusOK,
+			components.Message(
+				"Error updating project: "+err.Error(),
+				"error",
+			))
+		return
+	}
+
+	utils.RenderHTML(c,
+		http.StatusOK,
+		components.NewProjectResponse(project.APIKeyHash),
+	)
+}
+
 // List all projects for the current user
 func GetProjectsHTML(c *gin.Context) {
 	var projects []models.Project

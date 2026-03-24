@@ -9,7 +9,9 @@ templ Dashboard(userID string, sessionID string) {
         <!-- Header -->
         <div class="flex items-center justify-between">
             <h1 class="text-xl font-semibold text-gray-800">Projects</h1>
+			<p class="text-sm text-gray-600">Manage your projects and API keys. For all other operations, please use the API, the documentation is available <a href="/docs" class="text-indigo-600 hover:underline">here</a>.</p>
         </div>
+
 
         <!-- Inline Create -->
         @components.ProjectInlineForm()

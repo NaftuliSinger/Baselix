@@ -28,6 +28,7 @@ func New() *gin.Engine {
 	auth.GET("/dashboard", handlers.Dashboard)
 
 	auth.POST("/projects", handlers.CreateProjectHTML)
+	auth.POST("/projects/:id/rotate-key", handlers.RotateAPIKeyHTML)
 	auth.GET("/projects", handlers.GetProjectsHTML)
 
 	return r
