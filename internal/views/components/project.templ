@@ -50,7 +50,7 @@ templ ProjectInlineForm(){
 
 templ NewProjectResponse(apikey string) {
     <div 
-        x-data="{ open: true, copied: false }"
+        x-data={ fmt.Sprintf(`{ open: true, copied: false, apikey: %q }`, apikey) }
         x-show="open"
         x-transition
         class="fixed inset-0 z-50 flex items-center justify-center"
@@ -92,7 +92,7 @@ templ NewProjectResponse(apikey string) {
 
                 <button
                     @click="
-                        navigator.clipboard.writeText('{ apikey }');
+                        navigator.clipboard.writeText(apikey);
                         copied = true;
                         setTimeout(() => copied = false, 2000);
                     "
