@@ -3,53 +3,80 @@ package pages
 import "baselix/internal/views/components"
 
 templ Base(publishableKey string, content templ.Component) {
-	<!DOCTYPE html>
-	<html lang="en">
-	<head>
-		<meta charset="UTF-8"/>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-		<title>Baselix</title>
-		<script src="https://cdn.tailwindcss.com"></script>
-		<script src="https://unpkg.com/htmx.org@1.9.10"></script>
-		<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-		<script>
-			async function onClerkLoad() {
-				if (!window.Clerk) return;
-				await window.Clerk.load({
-					routerPush: function(to) { window.location.href = to; },
-					routerReplace: function(to) { window.location.replace(to); },
-				});
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	<title>Baselix</title>
 
-				var signInLink = document.getElementById('clerk-sign-in-link');
-				var userBtn = document.getElementById('clerk-user-button');
+	<script src="https://cdn.tailwindcss.com"></script>
+	<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+	<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-				if (window.Clerk.user) {
-					if (signInLink) signInLink.style.display = 'none';
-					if (userBtn) {
-						userBtn.style.display = 'flex';
-						window.Clerk.mountUserButton(userBtn);
-					}
+	<script>
+		let clerkLoaded = false;
+
+		async function onClerkLoad() {
+			if (!window.Clerk || clerkLoaded) return;
+			clerkLoaded = true;
+
+			await window.Clerk.load();
+
+			const authArea = document.getElementById('clerk-auth-area');
+			const signInLink = document.getElementById('clerk-sign-in-link');
+			const userBtn = document.getElementById('clerk-user-button');
+
+			if (window.Clerk.user) {
+				if (signInLink) signInLink.style.display = 'none';
+				if (userBtn) {
+					userBtn.style.display = 'flex';
+					userBtn.innerHTML = '';
+					window.Clerk.mountUserButton(userBtn);
 				}
-
-				var signInEl = document.getElementById('clerk-sign-in');
-				if (signInEl) {
-					if (window.Clerk.user) {
-						window.location.replace('/dashboard');
-					} else {
-						window.Clerk.mountSignIn(signInEl, { fallbackRedirectUrl: '/dashboard' });
-					}
-				}
+			} else {
+				if (signInLink) signInLink.style.display = '';
+				if (userBtn) userBtn.style.display = 'none';
 			}
-		</script>
-	</head>
-	<body class="bg-gray-100 min-h-screen font-sans text-gray-900">
-		@components.Nav()
-		<main class="container mx-auto px-4 py-8">
-			@content
-		</main>
-		if publishableKey != "" {
-			<script async crossorigin="anonymous" data-clerk-publishable-key={ publishableKey } src="https://unpkg.com/@clerk/clerk-js@5/dist/clerk.browser.js" onload="onClerkLoad()"></script>
+
+			// Reveal after state is determined — no flicker
+			if (authArea) authArea.style.visibility = 'visible';
+
+			// Protected page: just show/hide content, no redirects
+			const protectedEl = document.getElementById('clerk-protected-page');
+			if (protectedEl) {
+				protectedEl.style.opacity = window.Clerk.user ? '1' : '0';
+				protectedEl.style.pointerEvents = window.Clerk.user ? '' : 'none';
+			}
+
+			// Sign-in element: mount without automatic redirect
+			const signInEl = document.getElementById('clerk-sign-in');
+			if (signInEl) {
+				signInEl.innerHTML = "";
+				window.Clerk.mountSignIn(signInEl, {
+					fallbackRedirectUrl: "/dashboard"
+				});
+			}
 		}
-	</body>
-	</html>
+	</script>
+</head>
+
+<body class="bg-gray-100 min-h-screen font-sans text-gray-900">
+	@components.Nav()
+
+	<main class="container mx-auto px-4 py-8">
+		@content
+	</main>
+
+	if publishableKey != "" {
+		<script
+			async
+			crossorigin="anonymous"
+			data-clerk-publishable-key={ publishableKey }
+			src="https://unpkg.com/@clerk/clerk-js@5/dist/clerk.browser.js"
+			onload="onClerkLoad()">
+		</script>
+	}
+</body>
+</html>
 }

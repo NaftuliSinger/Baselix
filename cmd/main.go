@@ -15,8 +15,6 @@ func main() {
 
 	db.Init(config.Cfg)
 
-	utils.Debug("Sample users inserted", true)
-
 	r := router.New()
 
 	r.Run(":" + config.Cfg.AppPort)

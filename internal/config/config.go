@@ -16,6 +16,7 @@ type Config struct {
 	CreateTables        bool
 	ClerkSecretKey      string
 	ClerkPublishableKey string
+	ClerkPublicKey      string
 }
 
 var Cfg *Config
@@ -37,6 +38,7 @@ func Init() {
 		CreateTables:        getEnv("CREATE_TABLES", "false") == "true",
 		ClerkSecretKey:      getEnv("CLERK_SECRET_KEY", ""),
 		ClerkPublishableKey: getEnv("CLERK_PUBLISHABLE_KEY", ""),
+		ClerkPublicKey:      getEnv("CLERK_PUBLIC_KEY", ""),
 	}
 
 	log.Println("Config loaded")

@@ -7,10 +7,10 @@ templ Nav() {
 			<ul class="flex items-center space-x-6">
 				<li><a href="/" class="text-gray-300 hover:text-white transition-colors">Home</a></li>
 				<li><a href="/dashboard" class="text-gray-300 hover:text-white transition-colors">Dashboard</a></li>
-				<li id="clerk-sign-in-link">
-					<a href="/sign-in" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">Sign In</a>
+				<li id="clerk-auth-area" class="flex items-center justify-center" style="min-width:100px; height:36px; visibility:hidden;">
+					<a id="clerk-sign-in-link" href="/sign-in" class="flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 rounded-lg text-sm font-semibold transition-colors" style="height:36px;">Sign In</a>
+					<div id="clerk-user-button" class="flex items-center justify-center" style="display:none; height:36px;"></div>
 				</li>
-				<li id="clerk-user-button" class="flex items-center" style="display:none"></li>
 			</ul>
 		</div>
 	</nav>

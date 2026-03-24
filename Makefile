@@ -1,5 +1,9 @@
 APP_NAME=baselix
 
+dev:
+	$(MAKE) templ
+	$(MAKE) run
+
 run:
 	go run ./cmd
 
@@ -8,9 +12,6 @@ build:
 
 templ:
 	templ generate
-
-dev:
-	templ generate && go run ./cmd
 
 tidy:
 	go mod tidy
