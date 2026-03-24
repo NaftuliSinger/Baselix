@@ -17,6 +17,7 @@ type Config struct {
 	ClerkSecretKey      string
 	ClerkPublishableKey string
 	ClerkPublicKey      string
+	ROrigin             string
 }
 
 var Cfg *Config
@@ -39,6 +40,7 @@ func Init() {
 		ClerkSecretKey:      getEnv("CLERK_SECRET_KEY", ""),
 		ClerkPublishableKey: getEnv("CLERK_PUBLISHABLE_KEY", ""),
 		ClerkPublicKey:      getEnv("CLERK_PUBLIC_KEY", ""),
+		ROrigin:             getEnv("R_ORIGIN", "http://localhost:8080"),
 	}
 
 	log.Println("Config loaded")

@@ -49,7 +49,7 @@ func RequireAuth() gin.HandlerFunc {
 		}
 
 		// Optional: check 'azp' claim
-		permittedOrigins := []string{"http://localhost:8080"} // your allowed azp
+		permittedOrigins := []string{config.Cfg.ROrigin} // your allowed azp
 		allowed := false
 		for _, o := range permittedOrigins {
 			if claims.Azp == o {
