@@ -11,3 +11,6 @@ templ:
 
 dev:
 	templ generate && go run ./cmd
+
+tidy:
+	go mod tidy
