@@ -14,6 +14,9 @@ import (
 func New() *gin.Engine {
 	r := gin.Default()
 
+	// static files
+	r.Static("/static", "./static")
+
 	r.GET("/", func(c *gin.Context) {
 		utils.RenderHTML(c, http.StatusOK, pages.Base(config.Cfg.ClerkPublishableKey, pages.Index()))
 	})

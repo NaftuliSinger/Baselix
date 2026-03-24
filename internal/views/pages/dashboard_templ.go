@@ -33,7 +33,7 @@ func Dashboard(userID string, sessionID string) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-4xl mx-auto space-y-6\"><!-- Header --><div class=\"flex items-center justify-between\"><h1 class=\"text-xl font-semibold text-gray-800\">Projects</h1><p class=\"text-sm text-gray-600\">Manage your projects and API keys. For all other operations, please use the API, the documentation is available <a href=\"/docs\" class=\"text-indigo-600 hover:underline\">here</a>.</p></div><!-- Inline Create -->")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-4xl mx-auto space-y-6\"><!-- Header --><div class=\"flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2\"><h1 class=\"text-xl font-semibold text-gray-800\">Projects</h1><p class=\"text-sm text-gray-600 sm:ml-4\">Manage your projects and API keys. For all other operations, please use the API, the documentation is available <a href=\"/docs\" target=\"_blank\" class=\"text-indigo-600 hover:underline\">here</a>.</p></div><!-- Inline Create -->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
