@@ -8,6 +8,7 @@ import (
 templ ProjectInlineForm(){
     <form 
         class="flex flex-col sm:flex-row gap-2"
+        x-ref="projectForm"
         hx-post="/projects"
         hx-target="#modal-root"
         hx-swap="innerHTML"
@@ -34,6 +35,13 @@ templ ProjectInlineForm(){
             Add
         </button>
     </form>
+
+    <script>
+        document.addEventListener('htmx:afterRequest', (event) => {
+            const form = event.target.closest('form[x-ref="projectForm"]');
+            if (form) form.reset();
+        });
+    </script>
 
     <div id="new-project-response-wrapper" class="mt-4">
         <!-- New project response will be injected here -->

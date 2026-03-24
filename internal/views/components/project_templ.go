@@ -34,7 +34,7 @@ func ProjectInlineForm() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<form class=\"flex flex-col sm:flex-row gap-2\" hx-post=\"/projects\" hx-target=\"#modal-root\" hx-swap=\"innerHTML\"><input type=\"text\" name=\"Name\" placeholder=\"Project name\" required class=\"flex-1 border rounded px-3 py-2 text-sm\"> <input type=\"text\" name=\"Description\" placeholder=\"Project description\" class=\"flex-1 border rounded px-3 py-2 text-sm\"> <button type=\"submit\" class=\"bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700\">Add</button></form><div id=\"new-project-response-wrapper\" class=\"mt-4\"><!-- New project response will be injected here --></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<form class=\"flex flex-col sm:flex-row gap-2\" x-ref=\"projectForm\" hx-post=\"/projects\" hx-target=\"#modal-root\" hx-swap=\"innerHTML\"><input type=\"text\" name=\"Name\" placeholder=\"Project name\" required class=\"flex-1 border rounded px-3 py-2 text-sm\"> <input type=\"text\" name=\"Description\" placeholder=\"Project description\" class=\"flex-1 border rounded px-3 py-2 text-sm\"> <button type=\"submit\" class=\"bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700\">Add</button></form><script>\r\n        document.addEventListener('htmx:afterRequest', (event) => {\r\n            const form = event.target.closest('form[x-ref=\"projectForm\"]');\r\n            if (form) form.reset();\r\n        });\r\n    </script><div id=\"new-project-response-wrapper\" class=\"mt-4\"><!-- New project response will be injected here --></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -70,7 +70,7 @@ func NewProjectResponse(apikey string) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(apikey)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/components/project.templ`, Line: 83, Col: 47}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/components/project.templ`, Line: 91, Col: 47}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -123,7 +123,7 @@ func ProjectTable(projects []models.Project) templ.Component {
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(project.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/components/project.templ`, Line: 136, Col: 46}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/components/project.templ`, Line: 144, Col: 46}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -136,7 +136,7 @@ func ProjectTable(projects []models.Project) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(project.Description)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/components/project.templ`, Line: 139, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/components/project.templ`, Line: 147, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -149,7 +149,7 @@ func ProjectTable(projects []models.Project) templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/projects/%s/rotate-key", project.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/components/project.templ`, Line: 144, Col: 95}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/components/project.templ`, Line: 152, Col: 95}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
