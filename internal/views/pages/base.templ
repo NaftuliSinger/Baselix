@@ -8,62 +8,48 @@ templ Base(publishableKey string, content templ.Component) {
 	<head>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-		<meta name="clerk-publishable-key" content={ publishableKey }/>
 		<title>Baselix</title>
 		<script src="https://cdn.tailwindcss.com"></script>
 		<script src="https://unpkg.com/htmx.org@1.9.10"></script>
 		<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 		<script>
 			async function onClerkLoad() {
-				var publishableKeyMeta = document.querySelector('meta[name="clerk-publishable-key"]');
-				var publishableKey = publishableKeyMeta ? publishableKeyMeta.content : '';
-				if (!publishableKey || !window.Clerk) {
-					return;
-				}
-
+				if (!window.Clerk) return;
 				await window.Clerk.load({
-					publishableKey: publishableKey,
-					signInFallbackRedirectUrl: '/dashboard',
-					signUpFallbackRedirectUrl: '/dashboard',
-					afterSignOutUrl: '/',
+					routerPush: function(to) { window.location.href = to; },
+					routerReplace: function(to) { window.location.replace(to); },
 				});
-
-				var clerk = window.Clerk;
-				window.__clerk = clerk;
 
 				var signInLink = document.getElementById('clerk-sign-in-link');
 				var userBtn = document.getElementById('clerk-user-button');
-				if (clerk.user) {
+
+				if (window.Clerk.user) {
 					if (signInLink) signInLink.style.display = 'none';
 					if (userBtn) {
-						userBtn.style.display = '';
-						clerk.mountUserButton(userBtn);
+						userBtn.style.display = 'flex';
+						window.Clerk.mountUserButton(userBtn);
 					}
-				} else {
-					if (signInLink) signInLink.style.display = '';
-					if (userBtn) userBtn.style.display = 'none';
 				}
 
 				var signInEl = document.getElementById('clerk-sign-in');
 				if (signInEl) {
-					if (clerk.user) {
+					if (window.Clerk.user) {
 						window.location.replace('/dashboard');
-						return;
+					} else {
+						window.Clerk.mountSignIn(signInEl, { fallbackRedirectUrl: '/dashboard' });
 					}
-
-					clerk.mountSignIn(signInEl, {
-						fallbackRedirectUrl: '/dashboard',
-					});
 				}
 			}
 		</script>
-		<script async src="https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js" onload="onClerkLoad()"></script>
 	</head>
 	<body class="bg-gray-100 min-h-screen font-sans text-gray-900">
 		@components.Nav()
 		<main class="container mx-auto px-4 py-8">
 			@content
 		</main>
+		if publishableKey != "" {
+			<script async crossorigin="anonymous" data-clerk-publishable-key={ publishableKey } src="https://unpkg.com/@clerk/clerk-js@5/dist/clerk.browser.js" onload="onClerkLoad()"></script>
+		}
 	</body>
 	</html>
 }

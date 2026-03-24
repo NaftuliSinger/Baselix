@@ -3,14 +3,14 @@ package components
 templ Nav() {
 	<nav class="bg-gray-900 shadow-md">
 		<div class="container mx-auto px-4 py-3 flex items-center justify-between">
-			<span class="text-white text-xl font-bold tracking-wide">Baselix</span>
+			<a href="/" class="text-white text-xl font-bold tracking-wide">Baselix</a>
 			<ul class="flex items-center space-x-6">
 				<li><a href="/" class="text-gray-300 hover:text-white transition-colors">Home</a></li>
 				<li><a href="/dashboard" class="text-gray-300 hover:text-white transition-colors">Dashboard</a></li>
-				<li id="clerk-sign-in-link" style="display:none">
-					<a href="/sign-in" class="text-gray-300 hover:text-white transition-colors">Sign In</a>
+				<li id="clerk-sign-in-link">
+					<a href="/sign-in" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">Sign In</a>
 				</li>
-				<li id="clerk-user-button" style="display:none"></li>
+				<li id="clerk-user-button" class="flex items-center" style="display:none"></li>
 			</ul>
 		</div>
 	</nav>
