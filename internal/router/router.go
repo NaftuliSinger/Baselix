@@ -1,6 +1,8 @@
 package router
 
 import (
+	"baselix/internal/config"
+	"baselix/internal/middleware"
 	"baselix/internal/utils"
 	"baselix/internal/views/pages"
 	"net/http"
@@ -12,14 +14,21 @@ func New() *gin.Engine {
 	r := gin.Default()
 
 	r.GET("/", func(c *gin.Context) {
-		utils.RenderHTML(c, http.StatusOK, pages.Base(pages.Index()))
+		utils.RenderHTML(c, http.StatusOK, pages.Base(config.Cfg.ClerkPublishableKey, pages.Index()))
 	})
 
-	r.GET("/dashboard", func(c *gin.Context) {
-		utils.RenderHTML(c, http.StatusOK, pages.Base(pages.Dashboard()))
+	r.GET("/sign-in", func(c *gin.Context) {
+		utils.RenderHTML(c, http.StatusOK, pages.Base(config.Cfg.ClerkPublishableKey, pages.SignIn()))
 	})
 
-	// r.GET("/users", handlers.GetUsers)
+	// Protected routes
+	auth := r.Group("/")
+	auth.Use(middleware.RequireAuth())
+	auth.GET("/dashboard", func(c *gin.Context) {
+		utils.RenderHTML(c, http.StatusOK, pages.Base(config.Cfg.ClerkPublishableKey, pages.Dashboard()))
+	})
+
+	// auth.GET("/users", handlers.GetUsers)
 
 	return r
 }

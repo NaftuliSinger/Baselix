@@ -9,11 +9,13 @@ import (
 )
 
 type Config struct {
-	AppEnv       string
-	AppPort      string
-	Debug        bool
-	DB_DSN       string
-	CreateTables bool
+	AppEnv              string
+	AppPort             string
+	Debug               bool
+	DB_DSN              string
+	CreateTables        bool
+	ClerkSecretKey      string
+	ClerkPublishableKey string
 }
 
 var Cfg *Config
@@ -28,11 +30,13 @@ func Init() {
 	}
 
 	Cfg = &Config{
-		AppEnv:       getEnv("APP_ENV", "development"),
-		AppPort:      getEnv("APP_PORT", "8080"),
-		Debug:        debug,
-		DB_DSN:       getEnv("DB_DSN", ""),
-		CreateTables: getEnv("CREATE_TABLES", "false") == "true",
+		AppEnv:              getEnv("APP_ENV", "development"),
+		AppPort:             getEnv("APP_PORT", "8080"),
+		Debug:               debug,
+		DB_DSN:              getEnv("DB_DSN", ""),
+		CreateTables:        getEnv("CREATE_TABLES", "false") == "true",
+		ClerkSecretKey:      getEnv("CLERK_SECRET_KEY", ""),
+		ClerkPublishableKey: getEnv("CLERK_PUBLISHABLE_KEY", ""),
 	}
 
 	log.Println("Config loaded")

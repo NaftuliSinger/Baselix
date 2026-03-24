@@ -2,16 +2,62 @@ package pages
 
 import "baselix/internal/views/components"
 
-templ Base(content templ.Component) {
+templ Base(publishableKey string, content templ.Component) {
 	<!DOCTYPE html>
 	<html lang="en">
 	<head>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<meta name="clerk-publishable-key" content={ publishableKey }/>
 		<title>Baselix</title>
 		<script src="https://cdn.tailwindcss.com"></script>
 		<script src="https://unpkg.com/htmx.org@1.9.10"></script>
 		<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+		<script>
+			async function onClerkLoad() {
+				var publishableKeyMeta = document.querySelector('meta[name="clerk-publishable-key"]');
+				var publishableKey = publishableKeyMeta ? publishableKeyMeta.content : '';
+				if (!publishableKey || !window.Clerk) {
+					return;
+				}
+
+				await window.Clerk.load({
+					publishableKey: publishableKey,
+					signInFallbackRedirectUrl: '/dashboard',
+					signUpFallbackRedirectUrl: '/dashboard',
+					afterSignOutUrl: '/',
+				});
+
+				var clerk = window.Clerk;
+				window.__clerk = clerk;
+
+				var signInLink = document.getElementById('clerk-sign-in-link');
+				var userBtn = document.getElementById('clerk-user-button');
+				if (clerk.user) {
+					if (signInLink) signInLink.style.display = 'none';
+					if (userBtn) {
+						userBtn.style.display = '';
+						clerk.mountUserButton(userBtn);
+					}
+				} else {
+					if (signInLink) signInLink.style.display = '';
+					if (userBtn) userBtn.style.display = 'none';
+				}
+
+				var signInEl = document.getElementById('clerk-sign-in');
+				if (signInEl) {
+					if (clerk.user) {
+						window.location.replace('/dashboard');
+						return;
+					}
+
+					clerk.mountSignIn(signInEl, {
+						fallbackRedirectUrl: '/dashboard',
+					});
+				}
+			}
+		</script>
+		<script async src="https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js" onload="onClerkLoad()"></script>
 	</head>
 	<body class="bg-gray-100 min-h-screen font-sans text-gray-900">
 		@components.Nav()
