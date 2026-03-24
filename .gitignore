@@ -1,0 +1,19 @@
+# binaries
+bin/
+*.exe
+
+# go
+/vendor/
+/go.sum
+
+# env
+.env
+
+# mac
+.DS_Store
+
+# logs
+*.log
+
+# templ
+*_templ.go
