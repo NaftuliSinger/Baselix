@@ -28,6 +28,7 @@ func CreateProjectHTML(c *gin.Context) {
 
 	project.ID = uuid.New()
 	project.UserID = middleware.GetUserID(c) // assign the current user
+	project.APIKeyHash, _ = utils.GenerateHashedAPIKey()
 
 	if _, err := db.DB.NewInsert().Model(&project).Exec(c); err != nil {
 		utils.RenderHTML(c,
@@ -43,10 +44,8 @@ func CreateProjectHTML(c *gin.Context) {
 
 	utils.RenderHTML(c,
 		http.StatusOK,
-		components.Message(
-			"Project created successfully!",
-			"success",
-		))
+		components.NewProjectResponse(project.APIKeyHash),
+	)
 }
 
 // List all projects for the current user
@@ -68,6 +67,6 @@ func GetProjectsHTML(c *gin.Context) {
 	utils.RenderHTML(
 		c,
 		http.StatusOK,
-		components.ProjectList(projects),
+		components.ProjectTable(projects),
 	)
 }

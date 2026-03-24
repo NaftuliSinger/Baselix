@@ -67,6 +67,7 @@ templ Base(publishableKey string, content templ.Component) {
 	<main class="container mx-auto px-4 py-8">
 		@content
 	</main>
+	@components.ModalRoot()
 
 	if publishableKey != "" {
 		<script

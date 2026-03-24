@@ -55,6 +55,10 @@ func Base(publishableKey string, content templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
+		templ_7745c5c3_Err = components.ModalRoot().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
 		if publishableKey != "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<script async crossorigin=\"anonymous\" data-clerk-publishable-key=\"")
 			if templ_7745c5c3_Err != nil {
@@ -63,7 +67,7 @@ func Base(publishableKey string, content templ.Component) templ.Component {
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(publishableKey)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/pages/base.templ`, Line: 75, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/pages/base.templ`, Line: 76, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
