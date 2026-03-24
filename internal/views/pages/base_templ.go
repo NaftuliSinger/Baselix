@@ -43,7 +43,7 @@ func Base(publishableKey string, content templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<main class=\"mt-14 pb-12 overflow-y-auto h-[calc(100vh-3.5rem)]\"><div class=\"container mx-auto px-4 py-8\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<main class=\"mt-14 pb-20 sm:pb-12 overflow-y-auto h-[calc(100vh-3.5rem)]\"><div class=\"container mx-auto px-4 py-8\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
