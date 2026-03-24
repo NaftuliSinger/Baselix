@@ -1,0 +1,23 @@
+package components
+
+import "time"
+
+templ Footer() {
+    <footer class="bg-gray-900 text-gray-300 shadow-md fixed bottom-0 w-full">
+        <div class="container mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between text-sm">
+            
+            <!-- Copyright -->
+            <div class="mb-2 sm:mb-0">
+                &copy; {time.Now().Year()} Baselix. All rights reserved.
+            </div>
+
+            <!-- Footer Links -->
+            <ul class="flex space-x-4">
+                <li><a href="/terms" class="hover:text-white transition-colors">Terms</a></li>
+                <li><a href="/privacy" class="hover:text-white transition-colors">Privacy</a></li>
+                <li><a href="/contact" class="hover:text-white transition-colors">Contact</a></li>
+                <li><a href="/about" class="hover:text-white transition-colors">About</a></li>
+            </ul>
+        </div>
+    </footer>
+}

@@ -1,14 +1,86 @@
 package pages
 
-
 templ Index() {
-	<div class="flex flex-col items-center justify-center min-h-[70vh]">
-		<div class="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full text-center">
-			<h1 class="text-4xl font-bold text-gray-800 mb-3">Welcome to Baselix</h1>
-			<p class="text-gray-500 mb-8">A modern Go web starter kit.</p>
-			<a href="/dashboard" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors">
-				Go to Dashboard
-			</a>
-		</div>
-	</div>
+  <div class="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8">
+
+    <section class="text-center py-16 max-w-2xl w-full">
+      <h1 class="text-4xl sm:text-5xl font-bold text-gray-800 mb-4">Baselix</h1>
+      <p class="text-gray-600 text-lg sm:text-xl mb-8">
+        The simplest way to add a backend to your app. Define your schema. Store data instantly. No database setup required.
+      </p>
+      <a href="/dashboard" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors">
+        Go to Dashboard
+      </a>
+    </section>
+
+    <section class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 text-center py-16 max-w-6xl w-full">
+      
+      <div class="bg-white rounded-2xl shadow-md p-6 flex flex-col items-center">
+        <h3 class="text-xl font-semibold mb-2">Start in Seconds</h3>
+        <p class="text-gray-500">No setup. No config. Just create a project, get your API key, and go.</p>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-md p-6 flex flex-col items-center">
+        <h3 class="text-xl font-semibold mb-2">Simple Structured Data</h3>
+        <p class="text-gray-500">SQL-style tables without the complexity, schema defined via API.</p>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-md p-6 flex flex-col items-center">
+        <h3 class="text-xl font-semibold mb-2">Files Built In</h3>
+        <p class="text-gray-500">Attach files as fields. No buckets, no extra APIs.</p>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-md p-6 flex flex-col items-center">
+        <h3 class="text-xl font-semibold mb-2">Safe by Default</h3>
+        <p class="text-gray-500">Automatic backups, secure access, project isolation.</p>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-md p-6 flex flex-col items-center">
+        <h3 class="text-xl font-semibold mb-2">Predictable Pricing</h3>
+        <p class="text-gray-500">Pay for what you store, not confusing request-based billing. Free plan available for pretty much every use case.</p>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-md p-6 flex flex-col items-center">
+        <h3 class="text-xl font-semibold mb-2">No Lock-In</h3>
+        <p class="text-gray-500">Export your data anytime and move to your own database.</p>
+      </div>
+
+    </section>
+
+	<section class="text-center py-16 max-w-6xl w-full">
+      <h2 class="text-3xl font-bold text-gray-800 mb-8">Who is Baselix for?</h2>
+      <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 text-center">
+        
+        <div class="bg-white rounded-2xl shadow-md p-6 flex flex-col items-center">
+          <h3 class="text-xl font-semibold mb-2">Indie Hackers</h3>
+          <p class="text-gray-500">Build your MVP backend in minutes, without worrying about infra.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-md p-6 flex flex-col items-center">
+          <h3 class="text-xl font-semibold mb-2">Frontend Developers</h3>
+          <p class="text-gray-500">Focus on your UI, let Baselix handle the database and files.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-md p-6 flex flex-col items-center">
+          <h3 class="text-xl font-semibold mb-2">Hackathon Builders</h3>
+          <p class="text-gray-500">Ship fast prototypes with a fully working backend instantly.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-md p-6 flex flex-col items-center">
+          <h3 class="text-xl font-semibold mb-2">AI / Side Projects</h3>
+          <p class="text-gray-500">Store app data or model outputs without deploying a database.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="text-center py-16 max-w-2xl w-full">
+      <h2 class="text-3xl font-bold text-gray-800 mb-4">Build faster. Ship smarter.</h2>
+      <p class="text-gray-500 mb-8">Stop spending hours on backend setup. Get to building your app immediately.</p>
+      <a href="/dashboard" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors">
+        Start for Free
+      </a>
+    </section>
+
+  </div>
 }

@@ -65,10 +65,11 @@ templ Base(publishableKey string, content templ.Component) {
 <body class="bg-gray-100 min-h-screen font-sans text-gray-900">
 	@components.Nav()
 	@components.MessageContainer()
-	<main class="container mx-auto px-4 py-8">
+	<main class="container mx-auto px-4 py-8 pb-20">
 		@content
 	</main>
 	@components.ModalRoot()
+	@components.Footer()
 
 	if publishableKey != "" {
 		<script
