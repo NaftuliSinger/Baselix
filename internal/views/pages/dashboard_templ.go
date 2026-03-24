@@ -8,6 +8,10 @@ package pages
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+import (
+	"baselix/internal/views/components"
+)
+
 func Dashboard(userID string, sessionID string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -29,33 +33,15 @@ func Dashboard(userID string, sessionID string) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-4xl mx-auto\"><h1 class=\"text-3xl font-bold text-gray-800 mb-2\">Dashboard</h1><p class=\"text-gray-500 mb-8\">Welcome back! Here's an overview.</p><div class=\"grid grid-cols-1 sm:grid-cols-3 gap-6\"><div class=\"bg-white rounded-xl shadow p-6\"><p class=\"text-sm text-gray-500 uppercase tracking-wide\">Users</p><p class=\"text-3xl font-bold text-indigo-600 mt-1\">0</p></div><div class=\"bg-white rounded-xl shadow p-6\"><p class=\"text-sm text-gray-500 uppercase tracking-wide\">Sessions</p><p class=\"text-3xl font-bold text-indigo-600 mt-1\">0</p></div><div class=\"bg-white rounded-xl shadow p-6\"><p class=\"text-sm text-gray-500 uppercase tracking-wide\">Requests</p><p class=\"text-3xl font-bold text-indigo-600 mt-1\">0</p></div></div><p class=\"text-gray-500 mt-8 text-sm\">User ID: ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-4xl mx-auto\"><h1 class=\"text-3xl font-bold text-gray-800 mb-2\">Dashboard</h1><p class=\"text-gray-500 mb-8\">Welcome back! Here's an overview.</p><div class=\"grid grid-cols-1 sm:grid-cols-3 gap-6\"><div class=\"bg-white rounded-xl shadow p-6\"><p class=\"text-sm text-gray-500 uppercase tracking-wide\">Users</p><p class=\"text-3xl font-bold text-indigo-600 mt-1\">0</p></div><div class=\"bg-white rounded-xl shadow p-6\"><p class=\"text-sm text-gray-500 uppercase tracking-wide\">Sessions</p><p class=\"text-3xl font-bold text-indigo-600 mt-1\">0</p></div><div class=\"bg-white rounded-xl shadow p-6\"><p class=\"text-sm text-gray-500 uppercase tracking-wide\">Requests</p><p class=\"text-3xl font-bold text-indigo-600 mt-1\">0</p></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(userID)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/pages/dashboard.templ`, Line: 23, Col: 56}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
+		templ_7745c5c3_Err = components.ProjectForm().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</p><p class=\"text-gray-500 text-sm\">Session ID: ")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(sessionID)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/pages/dashboard.templ`, Line: 24, Col: 57}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</p></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"mt-8\"><h2 class=\"text-2xl font-bold text-gray-800 mb-4\">Your Projects</h2><p class=\"text-gray-500 mb-6\">Manage your projects and API keys.</p><div id=\"project-list\" class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\" hx-get=\"/projects\" hx-trigger=\"load, projects-updated from:body\" hx-target=\"#project-list\" hx-swap=\"innerHTML\"><!-- Project cards will go here --></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

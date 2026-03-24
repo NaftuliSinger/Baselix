@@ -27,7 +27,8 @@ func New() *gin.Engine {
 	auth.Use(middleware.RequireAuth())
 	auth.GET("/dashboard", handlers.Dashboard)
 
-	// auth.GET("/users", handlers.GetUsers)
+	auth.POST("/projects", handlers.CreateProjectHTML)
+	auth.GET("/projects", handlers.GetProjectsHTML)
 
 	return r
 }

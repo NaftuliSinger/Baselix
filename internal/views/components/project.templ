@@ -1,0 +1,54 @@
+package components
+
+import (
+    "baselix/internal/models"
+)
+
+templ ProjectForm(){
+    <form 
+        class="max-w-md mx-auto p-4 border rounded space-y-4"
+        hx-post="/projects"
+        hx-swap="none"
+        >
+        <h2 class="text-xl font-bold">Create Project</h2>
+
+        <div>
+            <label for="name" class="block font-medium">Name</label>
+            <input type="text" id="name" name="Name" required
+                class="w-full border rounded p-2"/>
+        </div>
+
+        <div>
+            <label for="description" class="block font-medium">Description</label>
+            <textarea id="description" name="Description" rows="4"
+                    class="w-full border rounded p-2"></textarea>
+        </div>
+
+        <div>
+            <label for="api_key_hash" class="block font-medium">API Key Hash</label>
+            <input type="text" id="api_key_hash" name="APIKeyHash" required
+                class="w-full border rounded p-2"/>
+        </div>
+
+        <button type="submit"
+                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Create Project
+        </button>
+    </form>
+}
+
+templ ProjectCard(project models.Project) {
+    <div class="bg-white shadow-md rounded-lg p-4">
+        <h2 class="text-xl font-bold mb-2">{ project.Name }</h2>
+        <p class="text-gray-600 mb-4">{ project.Description }</p>
+        <a href="/projects/{ project.ID }" class="text-indigo-600 hover:text-indigo-800 font-semibold">View Details</a>
+    </div>
+}
+
+templ ProjectList(projects []models.Project) {
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        for _, project := range projects {
+            @ProjectCard(project)
+        }
+    </div>
+}
