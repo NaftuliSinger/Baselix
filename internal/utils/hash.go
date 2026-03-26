@@ -2,27 +2,33 @@ package utils
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
-
-	"golang.org/x/crypto/bcrypt"
+	"encoding/hex"
 )
 
+// HashKey returns a deterministic SHA-256 hex digest of the key, suitable for DB lookup.
+func HashKey(key string) (string, error) {
+	sum := sha256.Sum256([]byte(key))
+	return hex.EncodeToString(sum[:]), nil
+}
+
 // GenerateHashedAPIKey creates a secure API key and its bcrypt hash
-func GenerateHashedAPIKey() (string, error) {
+func GenerateHashedAPIKey() (string, string, error) {
 	// 32 random bytes
 	bytes := make([]byte, 32)
 	if _, err := rand.Read(bytes); err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	// URL-safe key
 	apiKey := "sk_" + base64.RawURLEncoding.EncodeToString(bytes)
 
 	// Hash it
-	hashed, err := bcrypt.GenerateFromPassword([]byte(apiKey), bcrypt.DefaultCost)
+	hashed, err := HashKey(apiKey)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return string(hashed), nil
+	return apiKey, string(hashed), nil
 }

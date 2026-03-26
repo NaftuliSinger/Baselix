@@ -2,7 +2,8 @@ package router
 
 import (
 	"baselix/internal/config"
-	"baselix/internal/handlers"
+	apiHandlers "baselix/internal/handlers/API"
+	htmlHandlers "baselix/internal/handlers/HTML"
 	"baselix/internal/middleware"
 	"baselix/internal/utils"
 	"baselix/internal/views/pages"
@@ -28,11 +29,19 @@ func New() *gin.Engine {
 	// Protected routes
 	auth := r.Group("/")
 	auth.Use(middleware.RequireAuth())
-	auth.GET("/dashboard", handlers.Dashboard)
+	auth.GET("/dashboard", htmlHandlers.Dashboard)
 
-	auth.POST("/projects", handlers.CreateProjectHTML)
-	auth.POST("/projects/:id/rotate-key", handlers.RotateAPIKeyHTML)
-	auth.GET("/projects", handlers.GetProjectsHTML)
+	auth.POST("/projects", htmlHandlers.CreateProjectHTML)
+	auth.POST("/projects/:id/rotate-key", htmlHandlers.RotateAPIKeyHTML)
+	auth.GET("/projects", htmlHandlers.GetProjectsHTML)
+
+	// API routes
+	api := r.Group("/api")
+	api.Use(middleware.RequireAPIKey())
+
+	// V1 API endpoints
+	v1 := api.Group("/v1")
+	v1.GET("/sample", apiHandlers.SampleAPI)
 
 	return r
 }

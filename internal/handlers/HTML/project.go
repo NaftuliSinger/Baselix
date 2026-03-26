@@ -1,4 +1,4 @@
-package handlers
+package htmlHandlers
 
 import (
 	"net/http"
@@ -28,7 +28,9 @@ func CreateProjectHTML(c *gin.Context) {
 
 	project.ID = uuid.New()
 	project.UserID = middleware.GetUserID(c) // assign the current user
-	project.APIKeyHash, _ = utils.GenerateHashedAPIKey()
+
+	apiKey, apiHash, _ := utils.GenerateHashedAPIKey()
+	project.APIKeyHash = apiHash
 
 	if _, err := db.DB.NewInsert().Model(&project).Exec(c); err != nil {
 		utils.RenderHTML(c,
@@ -44,7 +46,7 @@ func CreateProjectHTML(c *gin.Context) {
 
 	utils.RenderHTML(c,
 		http.StatusOK,
-		components.NewProjectResponse(project.APIKeyHash),
+		components.NewProjectResponse(apiKey),
 	)
 }
 
@@ -62,7 +64,8 @@ func RotateAPIKeyHTML(c *gin.Context) {
 		return
 	}
 
-	project.APIKeyHash, _ = utils.GenerateHashedAPIKey()
+	apiKey, apiHash, _ := utils.GenerateHashedAPIKey()
+	project.APIKeyHash = apiHash
 
 	if _, err := db.DB.NewUpdate().Model(&project).Where("id = ?", projectID).Exec(c); err != nil {
 		utils.RenderHTML(c,
@@ -76,7 +79,7 @@ func RotateAPIKeyHTML(c *gin.Context) {
 
 	utils.RenderHTML(c,
 		http.StatusOK,
-		components.NewProjectResponse(project.APIKeyHash),
+		components.NewProjectResponse(apiKey),
 	)
 }
 

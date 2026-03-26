@@ -40,6 +40,7 @@ func Init(cfg *config.Config) {
 func createSchema(ctx context.Context) error {
 	models := []interface{}{
 		(*models.Project)(nil),
+		(*models.User)(nil),
 	}
 
 	for _, model := range models {

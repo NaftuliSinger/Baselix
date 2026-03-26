@@ -13,4 +13,6 @@ type Project struct {
 	Name        string    `bun:"name,notnull,unique:idx_user_name"`    // part of composite unique
 	APIKeyHash  string    `bun:"api_key_hash,unique,notnull"`
 	Description string    `bun:"description"`
+
+	User *User `bun:"rel:belongs-to,join:user_id=user_id"`
 }
