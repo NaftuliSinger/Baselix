@@ -1,6 +1,7 @@
 package router
 
 import (
+	apiHandlers "baselix/internal/handlers/API"
 	htmlHandlers "baselix/internal/handlers/HTML"
 	webhookHandlers "baselix/internal/handlers/webhook"
 	"baselix/internal/middleware"
@@ -36,7 +37,7 @@ func New() *gin.Engine {
 	api.Use(middleware.RequireAPIKey())
 
 	// V1 API endpoints
-	// v1 := api.Group("/v1")
-
+	v1 := api.Group("/v1")
+	v1.GET("/tables", apiHandlers.CreateTable)
 	return r
 }

@@ -32,17 +32,17 @@ func RequireAPIKey() gin.HandlerFunc {
 		}
 
 		// get the project and the user plan in one query
-		var project models.Project
-
-		err = db.DB.NewSelect().Model(&project).Relation("User").Where("api_key_hash = ?", hashed).Scan(c.Request.Context())
+		project, err := db.SelectProjectWithUserByAPIKeyHash(c.Request.Context(), hashed)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid API key"})
 			return
 		}
 
-		// get the user plan
+		// attach project id to context for handlers to use
+		c.Request = c.Request.WithContext(models.WithProjectID(c.Request.Context(), project.ID.String()))
 
-		c.Set("project", &project)
+		// also attach the project and plan to the Gin context for easy access in handlers
+		c.Set("project", project)
 		c.Set("plan", project.User.Plan)
 		c.Next()
 	}

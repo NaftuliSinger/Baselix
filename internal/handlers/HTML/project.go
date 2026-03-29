@@ -10,7 +10,6 @@ import (
 	"baselix/internal/views/components"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 // Handle form submission and create a project
@@ -26,7 +25,7 @@ func CreateProjectHTML(c *gin.Context) {
 		return
 	}
 
-	project.ID = uuid.New()
+	// project.ID = uuid.New()
 	project.UserID = middleware.GetUserID(c) // assign the current user
 
 	apiKey, apiHash, _ := utils.GenerateHashedAPIKey()
