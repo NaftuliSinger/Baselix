@@ -48,11 +48,15 @@ func InferTypeFromValue(value any) string {
 	}
 }
 
-// Take in raw json from new records and infer the schema for the table, returning a map of field name to field type. This is used when inserting new records to automatically create fields for any new attributes that are not already defined in the table's schema.
-func InferSchemaFromRecordData(data map[string]any) map[string]interface{} {
-	schema := make(map[string]interface{}, len(data))
-	for key, value := range data {
-		schema[key] = InferTypeFromValue(value)
+// InferSchemaFromRecords infers a unified schema from multiple records by merging all fields.
+func InferSchemaFromRecords(records []map[string]any) map[string]interface{} {
+	schema := make(map[string]interface{})
+	for _, data := range records {
+		for key, value := range data {
+			if _, exists := schema[key]; !exists {
+				schema[key] = InferTypeFromValue(value)
+			}
+		}
 	}
 	return schema
 }
