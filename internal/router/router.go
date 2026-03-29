@@ -15,9 +15,13 @@ func New() *gin.Engine {
 	// static files
 	r.Static("/static", "./static")
 
+	// Health check endpoint
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{"message": "pong"})
+	})
+
 	// Public routes
 	r.GET("/", htmlHandlers.Index)
-
 	r.GET("/sign-in", htmlHandlers.SignIn)
 
 	// Webhook route (no auth)
@@ -38,6 +42,10 @@ func New() *gin.Engine {
 
 	// V1 API endpoints
 	v1 := api.Group("/v1")
-	v1.GET("/tables", apiHandlers.CreateTable)
+	v1.GET("/tables", apiHandlers.GetTables)
+	v1.GET("/tables/:name", apiHandlers.GetTable)
+	v1.POST("/tables/:name", apiHandlers.CreateTable)
+	v1.PUT("/tables/:name", apiHandlers.UpdateTable)
+
 	return r
 }

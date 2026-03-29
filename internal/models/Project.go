@@ -16,6 +16,6 @@ type Project struct {
 
 	// Relationships
 	User     *User     `bun:"rel:belongs-to,join:user_id=user_id"`
-	Entities []*Entity `bun:"rel:has-many,join:id=project_id"`
+	Entities []*Table  `bun:"rel:has-many,join:id=project_id"`
 	Records  []*Record `bun:"rel:has-many,join:id=project_id"`
 }

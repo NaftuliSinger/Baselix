@@ -15,26 +15,30 @@ func RequireAPIKey() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if !strings.HasPrefix(authHeader, "Bearer ") {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing or invalid Authorization header"})
+			utils.ApiError(c, http.StatusUnauthorized, "missing or invalid Authorization header")
+			c.Abort()
 			return
 		}
 
 		apiKey := strings.TrimPrefix(authHeader, "Bearer ")
 		if apiKey == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing API key"})
+			utils.ApiError(c, http.StatusUnauthorized, "missing API key")
+			c.Abort()
 			return
 		}
 
 		hashed, err := utils.HashKey(apiKey)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+			utils.ApiError(c, http.StatusInternalServerError, "internal server error")
+			c.Abort()
 			return
 		}
 
 		// get the project and the user plan in one query
 		project, err := db.SelectProjectWithUserByAPIKeyHash(c.Request.Context(), hashed)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid API key"})
+			utils.ApiError(c, http.StatusUnauthorized, "invalid API key")
+			c.Abort()
 			return
 		}
 
