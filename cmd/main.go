@@ -27,7 +27,7 @@ func main() {
 	// Create and start the router
 	r := router.New()
 
-	var localhost string = ""
+	var localhost string = ":"
 	if config.Cfg.Localhost {
 		localhost = "localhost:"
 	}
