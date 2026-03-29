@@ -1,17 +1,5 @@
 package types
 
-type AttributeType string
-
-const (
-	AttributeTypeString AttributeType = "string"
-	AttributeTypeInt    AttributeType = "int"
-	AttributeTypeFloat  AttributeType = "float"
-	AttributeTypeBool   AttributeType = "bool"
-	AttributeTypeTime   AttributeType = "time"
-	AttributeTypeJSON   AttributeType = "json"
-	AttributeTypeUUID   AttributeType = "uuid"
-)
-
 type SchemaRequestBody struct {
 	Schema map[string]any `json:"schema"`
 }

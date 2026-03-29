@@ -61,16 +61,13 @@ func GetTableWithFields(ctx context.Context, projectID uuid.UUID, tableName stri
 func ExistsOrCreateTable(ctx context.Context, projectID uuid.UUID, tableName string, fields []models.Field) (table *models.Table, created bool, err error) {
 	table, err = GetTableWithFields(ctx, projectID, tableName)
 	if err != nil {
-		return nil, false, err
+		table, err = CreateTableWithFields(ctx, projectID, tableName, fields)
+		if err != nil {
+			return nil, false, err
+		}
+		return table, true, nil
 	}
-	if table != nil {
-		return table, false, nil
-	}
-	table, err = CreateTableWithFields(ctx, projectID, tableName, fields)
-	if err != nil {
-		return nil, false, err
-	}
-	return table, true, nil
+	return table, false, nil
 }
 
 func CreateTableWithFields(ctx context.Context, projectID uuid.UUID, tableName string, fields []models.Field) (table *models.Table, err error) {
@@ -103,6 +100,13 @@ func CreateTableWithFields(ctx context.Context, projectID uuid.UUID, tableName s
 		if _, err = tx.NewInsert().Model(field).Exec(ctx); err != nil {
 			return nil, err
 		}
+	}
+
+	// Populate table.Fields so callers can build a field map immediately
+	table.Fields = make([]*models.Field, len(fields))
+	for i := range fields {
+		f := fields[i]
+		table.Fields[i] = &f
 	}
 
 	return table, nil
@@ -196,20 +200,55 @@ func UpdateTableFields(ctx context.Context, tableName string, fields []models.Fi
 	return table, nil
 }
 
-func DeleteTable(ctx context.Context, tableName string) error {
-	// We rely on ON DELETE CASCADE to automatically delete the fields, records and values related to this table, so we only need to delete the table itself.
-	result, err := DB.NewDelete().Model((*models.Table)(nil)).
+func DeleteTable(ctx context.Context, tableName string) (err error) {
+	tx, err := DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			err = tx.Commit()
+		}
+	}()
+
+	// Fetch the table so we have its ID.
+	table := &models.Table{}
+	if err = tx.NewSelect().Model(table).
+		Column("id").
 		Where("name = ?", tableName).
-		Exec(ctx)
-	if err != nil {
-		return err
-	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if rowsAffected == 0 {
+		Scan(ctx); err != nil {
 		return fmt.Errorf("table %q not found", tableName)
 	}
+
+	// Delete values belonging to any record of this table.
+	if _, err = tx.NewDelete().Model((*models.Value)(nil)).
+		Where("record_id IN (SELECT id FROM records WHERE table_id = ?)", table.ID).
+		Exec(ctx); err != nil {
+		return err
+	}
+
+	// Delete records belonging to this table.
+	if _, err = tx.NewDelete().Model((*models.Record)(nil)).
+		Where("table_id = ?", table.ID).
+		Exec(ctx); err != nil {
+		return err
+	}
+
+	// Delete fields belonging to this table.
+	if _, err = tx.NewDelete().Model((*models.Field)(nil)).
+		Where("table_id = ?", table.ID).
+		Exec(ctx); err != nil {
+		return err
+	}
+
+	// Delete the table itself.
+	if _, err = tx.NewDelete().Model((*models.Table)(nil)).
+		Where("id = ?", table.ID).
+		Exec(ctx); err != nil {
+		return err
+	}
+
 	return nil
 }

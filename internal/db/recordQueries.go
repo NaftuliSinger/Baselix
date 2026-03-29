@@ -5,7 +5,7 @@ import (
 	"context"
 )
 
-func InsertRecords(ctx context.Context, tablename string, records []*models.Record) ([]*models.Record, error) {
+func InsertRecords(ctx context.Context, records []*models.Record) ([]*models.Record, error) {
 	if len(records) == 0 {
 		return records, nil
 	}
@@ -17,7 +17,7 @@ func InsertRecords(ctx context.Context, tablename string, records []*models.Reco
 	defer tx.Rollback()
 
 	// Insert records; bun populates IDs via RETURNING
-	_, err = tx.NewInsert().Model(&records).Table(tablename).Exec(ctx)
+	_, err = tx.NewInsert().Model(&records).Exec(ctx)
 	if err != nil {
 		return nil, err
 	}

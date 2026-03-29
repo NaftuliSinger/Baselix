@@ -11,6 +11,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func CreateSingleOrMultipleRecords(c *gin.Context) {
@@ -50,6 +51,7 @@ func CreateSingleOrMultipleRecords(c *gin.Context) {
 	cleanedSchema := utils.RemoveIDFromSchemaMap(schema)
 	fields := utils.ConvertSchemaMapToFields(cleanedSchema)
 
+	// Ensure the table exists and get its details
 	table, newTableCreated, err := db.ExistsOrCreateTable(c, project.ID, tableName, fields)
 	if err != nil {
 		utils.ApiError(c, http.StatusInternalServerError, "failed to create or get table")
@@ -65,45 +67,32 @@ func CreateSingleOrMultipleRecords(c *gin.Context) {
 	// Build Record+Value objects
 	modelRecords := make([]*models.Record, len(records))
 	for i, data := range records {
+		newRecID := uuid.New()
 		rec := &models.Record{
+			ID:        newRecID,
 			ProjectID: project.ID,
 			TableID:   table.ID,
 		}
-		for key, val := range data {
-			if key == "id" {
-				continue
+		rec.Values = make([]*models.Value, 0, len(data))
+
+		for key, value := range data {
+			field, exists := fieldMap[key]
+			if !exists {
+				utils.ApiError(c, http.StatusBadRequest, fmt.Sprintf("field %q not found in table schema", key))
+				return
 			}
-			field, ok := fieldMap[key]
-			if !ok {
-				continue
+			// get the type from field and pass into the next func
+			val, err := db.NewValue(rec.ID, field.ID, field.Type, value)
+			if err != nil {
+				utils.ApiError(c, http.StatusInternalServerError, fmt.Sprintf("failed to create value for field %q", key))
+				return
 			}
-			v := &models.Value{FieldID: field.ID}
-			switch field.Type {
-			case "string":
-				if s, ok := val.(string); ok {
-					v.ValueString = s
-				} else {
-					v.ValueString = fmt.Sprintf("%v", val)
-				}
-			case "int":
-				if n, ok := val.(float64); ok {
-					v.ValueInt = int(n)
-				}
-			case "float":
-				if n, ok := val.(float64); ok {
-					v.ValueFloat = n
-				}
-			case "bool":
-				if b, ok := val.(bool); ok {
-					v.ValueBool = b
-				}
-			}
-			rec.Values = append(rec.Values, v)
+			rec.Values = append(rec.Values, val)
 		}
 		modelRecords[i] = rec
 	}
 
-	inserted, err := db.InsertRecords(c, "records", modelRecords)
+	inserted, err := db.InsertRecords(c, modelRecords)
 	if err != nil {
 		utils.ApiError(c, http.StatusInternalServerError, "failed to insert records")
 		return
