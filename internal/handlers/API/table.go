@@ -165,3 +165,25 @@ func UpdateTable(c *gin.Context) {
 		"table_name": updatedTable.Name,
 	})
 }
+
+func DeleteTable(c *gin.Context) {
+	project := middleware.GetAPIProject(c)
+	if project == nil {
+		utils.ApiError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	// get table name from URL param
+	tableName := c.Param("name")
+
+	err := db.DeleteTable(c, tableName)
+
+	if err != nil {
+		utils.ApiError(c, http.StatusInternalServerError, "failed to delete table: "+err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Table '" + tableName + "' deleted successfully for project '" + project.Name + "'",
+	})
+}

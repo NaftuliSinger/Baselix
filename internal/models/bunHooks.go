@@ -29,3 +29,11 @@ func (ProjectScopedModel) BeforeSelect(ctx context.Context, q *bun.SelectQuery) 
 	}
 	return nil
 }
+
+// LimitedSelectModel is a mixin that caps every SELECT query at 1000 rows.
+type LimitedSelectModel struct{}
+
+func (LimitedSelectModel) BeforeSelect(_ context.Context, q *bun.SelectQuery) error {
+	q.Limit(1000)
+	return nil
+}

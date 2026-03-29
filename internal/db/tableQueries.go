@@ -2,10 +2,8 @@ package db
 
 import (
 	"baselix/internal/models"
-	"baselix/internal/types"
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
@@ -58,6 +56,21 @@ func GetTableWithFields(ctx context.Context, projectID uuid.UUID, tableName stri
 	}
 
 	return &table, nil
+}
+
+func ExistsOrCreateTable(ctx context.Context, projectID uuid.UUID, tableName string, fields []models.Field) (table *models.Table, created bool, err error) {
+	table, err = GetTableWithFields(ctx, projectID, tableName)
+	if err != nil {
+		return nil, false, err
+	}
+	if table != nil {
+		return table, false, nil
+	}
+	table, err = CreateTableWithFields(ctx, projectID, tableName, fields)
+	if err != nil {
+		return nil, false, err
+	}
+	return table, true, nil
 }
 
 func CreateTableWithFields(ctx context.Context, projectID uuid.UUID, tableName string, fields []models.Field) (table *models.Table, err error) {
@@ -183,58 +196,20 @@ func UpdateTableFields(ctx context.Context, tableName string, fields []models.Fi
 	return table, nil
 }
 
-// NewValue creates a Value with only the relevant typed field set.
-// attributeType must match Field.Type ("string", "int", "float", "bool", "time", "json", "uuid").
-func NewValue(recordID uuid.UUID, fieldID uuid.UUID, attributeType types.AttributeType, val any) (*models.Value, error) {
-	v := &models.Value{
-		RecordID: recordID,
-		FieldID:  fieldID,
+func DeleteTable(ctx context.Context, tableName string) error {
+	// We rely on ON DELETE CASCADE to automatically delete the fields, records and values related to this table, so we only need to delete the table itself.
+	result, err := DB.NewDelete().Model((*models.Table)(nil)).
+		Where("name = ?", tableName).
+		Exec(ctx)
+	if err != nil {
+		return err
 	}
-	switch attributeType {
-	case types.AttributeTypeString:
-		s, ok := val.(string)
-		if !ok {
-			return nil, fmt.Errorf("expected string, got %T", val)
-		}
-		v.ValueString = s
-	case types.AttributeTypeInt:
-		i, ok := val.(int)
-		if !ok {
-			return nil, fmt.Errorf("expected int, got %T", val)
-		}
-		v.ValueInt = i
-	case types.AttributeTypeFloat:
-		f, ok := val.(float64)
-		if !ok {
-			return nil, fmt.Errorf("expected float64, got %T", val)
-		}
-		v.ValueFloat = f
-	case types.AttributeTypeBool:
-		b, ok := val.(bool)
-		if !ok {
-			return nil, fmt.Errorf("expected bool, got %T", val)
-		}
-		v.ValueBool = b
-	case types.AttributeTypeTime:
-		t, ok := val.(time.Time)
-		if !ok {
-			return nil, fmt.Errorf("expected time.Time, got %T", val)
-		}
-		v.ValueTime = t
-	case types.AttributeTypeJSON:
-		s, ok := val.(string)
-		if !ok {
-			return nil, fmt.Errorf("expected json string, got %T", val)
-		}
-		v.ValueJSON = s
-	case types.AttributeTypeUUID:
-		u, ok := val.(uuid.UUID)
-		if !ok {
-			return nil, fmt.Errorf("expected uuid.UUID, got %T", val)
-		}
-		v.ValueUUID = u
-	default:
-		return nil, fmt.Errorf("unknown attribute type: %q", attributeType)
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
 	}
-	return v, nil
+	if rowsAffected == 0 {
+		return fmt.Errorf("table %q not found", tableName)
+	}
+	return nil
 }

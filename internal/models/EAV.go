@@ -13,6 +13,7 @@ type Table struct {
 
 	ProjectID uuid.UUID `bun:",type:uuid,notnull,unique:idx_project_name"` // part of composite unique
 	ProjectScopedModel
+	LimitedSelectModel
 
 	Name string `bun:"name,notnull,unique:idx_project_name"` // part of composite unique
 
@@ -25,6 +26,7 @@ type Table struct {
 type Field struct {
 	bun.BaseModel `bun:"table:fields"`
 	ID            uuid.UUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()"`
+	LimitedSelectModel
 
 	TableID uuid.UUID `bun:",type:uuid,notnull,unique:idx_table_name"` // part of composite unique
 	Name    string    `bun:"name,notnull,unique:idx_table_name"`       // part of composite unique
@@ -41,6 +43,7 @@ type Record struct {
 
 	ProjectID uuid.UUID `bun:",type:uuid,notnull"`
 	ProjectScopedModel
+	LimitedSelectModel
 
 	TableID uuid.UUID `bun:",type:uuid,notnull"`
 
@@ -52,6 +55,7 @@ type Record struct {
 
 type Value struct {
 	bun.BaseModel `bun:"table:values"`
+	LimitedSelectModel
 
 	ID uuid.UUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()"`
 

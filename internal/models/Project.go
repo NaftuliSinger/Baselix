@@ -7,6 +7,7 @@ import (
 
 type Project struct {
 	bun.BaseModel `bun:"table:projects"`
+	LimitedSelectModel
 
 	ID          uuid.UUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()"`
 	UserID      string    `bun:"user_id,notnull,unique:idx_user_name"` // part of composite unique
