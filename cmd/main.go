@@ -26,7 +26,12 @@ func main() {
 
 	// Create and start the router
 	r := router.New()
-	r.Run("localhost:" + config.Cfg.AppPort)
+
+	var localhost string = ""
+	if config.Cfg.Localhost {
+		localhost = "localhost:"
+	}
+	r.Run(localhost + config.Cfg.AppPort)
 	// Log server start
 	utils.Debug("Server started on port "+config.Cfg.AppPort, true)
 }

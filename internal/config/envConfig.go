@@ -10,6 +10,7 @@ import (
 
 type Config struct {
 	AppEnv              string
+	Localhost           bool
 	AppPort             string
 	Debug               bool
 	DB_DSN              string
@@ -34,6 +35,7 @@ func Init() {
 
 	Cfg = &Config{
 		AppEnv:              getEnv("APP_ENV", "development"),
+		Localhost:           getEnv("LOCALHOST", "false") == "true",
 		AppPort:             getEnv("APP_PORT", "8080"),
 		Debug:               debug,
 		DB_DSN:              getEnv("DB_DSN", ""),
