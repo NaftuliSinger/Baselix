@@ -1,13 +1,10 @@
 package router
 
 import (
-	"baselix/internal/config"
 	apiHandlers "baselix/internal/handlers/API"
 	htmlHandlers "baselix/internal/handlers/HTML"
+	webhookHandlers "baselix/internal/handlers/webhook"
 	"baselix/internal/middleware"
-	"baselix/internal/utils"
-	"baselix/internal/views/pages"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,13 +15,13 @@ func New() *gin.Engine {
 	// static files
 	r.Static("/static", "./static")
 
-	r.GET("/", func(c *gin.Context) {
-		utils.RenderHTML(c, http.StatusOK, pages.Base(config.Cfg.ClerkPublishableKey, pages.Index()))
-	})
+	// Public routes
+	r.GET("/", htmlHandlers.Index)
 
-	r.GET("/sign-in", func(c *gin.Context) {
-		utils.RenderHTML(c, http.StatusOK, pages.Base(config.Cfg.ClerkPublishableKey, pages.SignIn()))
-	})
+	r.GET("/sign-in", htmlHandlers.SignIn)
+
+	// Webhook route (no auth)
+	r.POST("/clerk-webhook", webhookHandlers.SvixWebhook)
 
 	// Protected routes
 	auth := r.Group("/")

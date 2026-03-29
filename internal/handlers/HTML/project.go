@@ -32,7 +32,7 @@ func CreateProjectHTML(c *gin.Context) {
 	apiKey, apiHash, _ := utils.GenerateHashedAPIKey()
 	project.APIKeyHash = apiHash
 
-	if _, err := db.DB.NewInsert().Model(&project).Exec(c); err != nil {
+	if err := db.InsertProject(c, &project); err != nil {
 		utils.RenderHTML(c,
 			http.StatusOK,
 			components.Message(
@@ -52,9 +52,10 @@ func CreateProjectHTML(c *gin.Context) {
 
 func RotateAPIKeyHTML(c *gin.Context) {
 	projectID := c.Param("id")
-	var project models.Project
 
-	if err := db.DB.NewSelect().Model(&project).Where("id = ?", projectID).Scan(c); err != nil {
+	project, err := db.SelectProjectByID(c, projectID)
+
+	if err != nil {
 		utils.RenderHTML(c,
 			http.StatusOK,
 			components.Message(
@@ -67,7 +68,7 @@ func RotateAPIKeyHTML(c *gin.Context) {
 	apiKey, apiHash, _ := utils.GenerateHashedAPIKey()
 	project.APIKeyHash = apiHash
 
-	if _, err := db.DB.NewUpdate().Model(&project).Where("id = ?", projectID).Exec(c); err != nil {
+	if err := db.UpdateProjectByID(c, project); err != nil {
 		utils.RenderHTML(c,
 			http.StatusOK,
 			components.Message(
@@ -85,10 +86,10 @@ func RotateAPIKeyHTML(c *gin.Context) {
 
 // List all projects for the current user
 func GetProjectsHTML(c *gin.Context) {
-	var projects []models.Project
 	userID := middleware.GetUserID(c)
 
-	err := db.DB.NewSelect().Model(&projects).Where("user_id = ?", userID).Scan(c)
+	projects, err := db.SelectProjectsByUserID(c, userID)
+
 	if err != nil {
 		utils.RenderHTML(c,
 			http.StatusInternalServerError,
