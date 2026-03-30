@@ -14,6 +14,7 @@ type Config struct {
 	AppPort             string
 	Debug               bool
 	DB_DSN              string
+	MaxSelectLimit      int
 	CreateTables        bool
 	ClerkSecretKey      string
 	ClerkPublishableKey string
@@ -39,6 +40,7 @@ func Init() {
 		AppPort:             getEnv("APP_PORT", "8080"),
 		Debug:               debug,
 		DB_DSN:              getEnv("DB_DSN", ""),
+		MaxSelectLimit:      getEnvInt("MAX_SELECT_LIMIT", 1000),
 		CreateTables:        getEnv("CREATE_TABLES", "false") == "true",
 		ClerkSecretKey:      getEnv("CLERK_SECRET_KEY", ""),
 		ClerkPublishableKey: getEnv("CLERK_PUBLISHABLE_KEY", ""),
@@ -53,6 +55,18 @@ func Init() {
 func getEnv(key, fallback string) string {
 	val, exists := os.LookupEnv(key)
 	if !exists {
+		return fallback
+	}
+	return val
+}
+
+func getEnvInt(key string, fallback int) int {
+	valStr := getEnv(key, "")
+	if valStr == "" {
+		return fallback
+	}
+	val, err := strconv.Atoi(valStr)
+	if err != nil {
 		return fallback
 	}
 	return val

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"baselix/internal/config"
 	"baselix/internal/models"
 	"context"
 	"fmt"
@@ -25,6 +26,8 @@ func GetProjectTablesWithFields(ctx context.Context, projectID uuid.UUID) ([]mod
 		Relation("Fields", func(q *bun.SelectQuery) *bun.SelectQuery {
 			return q.Column("id", "table_id", "name", "type")
 		}).
+		Where("\"table\".project_id = ?", projectID).
+		Limit(config.Cfg.MaxSelectLimit).
 		Scan(ctx)
 	if err != nil {
 		return nil, err
@@ -50,6 +53,8 @@ func GetTableWithFields(ctx context.Context, projectID uuid.UUID, tableName stri
 			return q.Column("id", "table_id", "name", "type")
 		}).
 		Where("\"table\".name = ?", tableName).
+		Where("\"table\".project_id = ?", projectID).
+		Limit(config.Cfg.MaxSelectLimit).
 		Scan(ctx)
 	if err != nil {
 		return nil, err
@@ -200,7 +205,7 @@ func UpdateTableFields(ctx context.Context, tableName string, fields []models.Fi
 	return table, nil
 }
 
-func DeleteTable(ctx context.Context, tableName string) (err error) {
+func DeleteTable(ctx context.Context, projectID uuid.UUID, tableName string) (err error) {
 	tx, err := DB.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -217,7 +222,7 @@ func DeleteTable(ctx context.Context, tableName string) (err error) {
 	table := &models.Table{}
 	if err = tx.NewSelect().Model(table).
 		Column("id").
-		Where("name = ?", tableName).
+		Where("name = ? AND project_id = ?", tableName, projectID).
 		Scan(ctx); err != nil {
 		return fmt.Errorf("table %q not found", tableName)
 	}
@@ -245,7 +250,7 @@ func DeleteTable(ctx context.Context, tableName string) (err error) {
 
 	// Delete the table itself.
 	if _, err = tx.NewDelete().Model((*models.Table)(nil)).
-		Where("id = ?", table.ID).
+		Where("id = ? AND project_id = ?", table.ID, projectID).
 		Exec(ctx); err != nil {
 		return err
 	}

@@ -176,7 +176,7 @@ func DeleteTable(c *gin.Context) {
 	// get table name from URL param
 	tableName := c.Param("name")
 
-	err := db.DeleteTable(c, tableName)
+	err := db.DeleteTable(c, project.ID, tableName)
 
 	if err != nil {
 		utils.ApiError(c, http.StatusInternalServerError, "failed to delete table: "+err.Error())

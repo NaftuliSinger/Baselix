@@ -42,10 +42,7 @@ func RequireAPIKey() gin.HandlerFunc {
 			return
 		}
 
-		// attach project id to context for handlers to use
-		c.Request = c.Request.WithContext(models.WithProjectID(c.Request.Context(), project.ID.String()))
-
-		// also attach the project and plan to the Gin context for easy access in handlers
+		// Attach the project and plan to the Gin context for easy access in handlers
 		c.Set("project", project)
 		c.Set("plan", project.User.Plan)
 		c.Next()

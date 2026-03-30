@@ -3,11 +3,19 @@ package db
 import (
 	"baselix/internal/models"
 	"context"
+	"fmt"
+
+	"github.com/google/uuid"
 )
 
 func InsertRecords(ctx context.Context, records []*models.Record) ([]*models.Record, error) {
 	if len(records) == 0 {
 		return records, nil
+	}
+
+	// if no project id is set on the records, we can't proceed
+	if records[0].ProjectID == uuid.Nil {
+		return nil, fmt.Errorf("project ID is required on records")
 	}
 
 	tx, err := DB.BeginTx(ctx, nil)
