@@ -31,20 +31,36 @@ func ConvertSchemaMapToFields(m map[string]interface{}) []models.Field {
 }
 
 func InferTypeFromValue(value any) string {
-	// In our case we treat all numbers as float for simplicity
-	switch value.(type) {
+	switch v := value.(type) {
 	case string:
+		// Try UUID first
+		if _, err := uuid.Parse(v); err == nil {
+			return "uuid"
+		}
+
+		// Try time in RFC3339 (ISO 8601) format with timezone
+		if _, err := time.Parse(time.RFC3339, v); err == nil {
+			return "time"
+		}
+
+		// Otherwise treat as string
 		return "string"
+
 	case float32, float64, int, int8, int16, int32, int64:
-		return "float"
+		return "float" // your existing choice to treat all numbers as float
+
 	case bool:
 		return "bool"
+
 	case time.Time:
 		return "time"
+
 	case map[string]any:
 		return "json"
+
 	case uuid.UUID:
 		return "uuid"
+
 	default:
 		return "unknown"
 	}

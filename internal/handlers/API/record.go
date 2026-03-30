@@ -85,7 +85,7 @@ func CreateSingleOrMultipleRecords(c *gin.Context) {
 			// get the type from field and pass into the next func
 			val, err := db.NewValue(rec.ID, field.ID, field.Type, value)
 			if err != nil {
-				utils.ApiError(c, http.StatusInternalServerError, fmt.Sprintf("failed to create value for field %q", key))
+				utils.ApiError(c, http.StatusInternalServerError, fmt.Sprintf("failed to create value for field %q, error: %v", key, err))
 				return
 			}
 			val.Field = field

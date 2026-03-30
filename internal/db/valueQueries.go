@@ -48,11 +48,18 @@ func NewValue(recordID uuid.UUID, fieldID uuid.UUID, fieldType string, val any) 
 		}
 		v.ValueBool = b
 	case "time":
-		t, ok := val.(time.Time)
-		if !ok {
-			return nil, fmt.Errorf("expected time.Time, got %T", val)
+		switch tv := val.(type) {
+		case time.Time:
+			v.ValueTime = tv
+		case string:
+			t, err := time.Parse(time.RFC3339, tv)
+			if err != nil {
+				return nil, fmt.Errorf("expected ISO 8601 timestamp, got %q: %w", tv, err)
+			}
+			v.ValueTime = t
+		default:
+			return nil, fmt.Errorf("expected time.Time or string, got %T", val)
 		}
-		v.ValueTime = t
 	case "json":
 		var s string
 		switch jv := val.(type) {
@@ -67,11 +74,18 @@ func NewValue(recordID uuid.UUID, fieldID uuid.UUID, fieldType string, val any) 
 		}
 		v.ValueJSON = s
 	case "uuid":
-		u, ok := val.(uuid.UUID)
-		if !ok {
-			return nil, fmt.Errorf("expected uuid.UUID, got %T", val)
+		switch uv := val.(type) {
+		case uuid.UUID:
+			v.ValueUUID = uv
+		case string:
+			u, err := uuid.Parse(uv)
+			if err != nil {
+				return nil, fmt.Errorf("expected UUID string, got %q: %w", uv, err)
+			}
+			v.ValueUUID = u
+		default:
+			return nil, fmt.Errorf("expected uuid.UUID or string, got %T", val)
 		}
-		v.ValueUUID = u
 	default:
 		return nil, fmt.Errorf("unknown field type: %q", fieldType)
 	}

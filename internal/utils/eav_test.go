@@ -113,13 +113,16 @@ func TestInferTypeFromValue_UnknownType(t *testing.T) {
 // Success case: multiple records with different fields should produce a merged schema
 func TestInferSchemaFromRecords_Success(t *testing.T) {
 	records := []map[string]any{
-		{"name": "Alice", "age": 30},
-		{"name": "Bob", "age": 25, "active": true},
+		{"name": "Alice", "age": 30, "active": true, "score": 3.14, "created_at": "2026-03-30T10:00:00Z", "user_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479", "meta": map[string]any{"key": "value"}},
 	}
 	expected := map[string]interface{}{
-		"name":   "string",
-		"age":    "float",
-		"active": "bool",
+		"name":       "string",
+		"age":        "float",
+		"active":     "bool",
+		"score":      "float",
+		"created_at": "time",
+		"user_id":    "uuid",
+		"meta":       "json",
 	}
 	result := InferSchemaFromRecords(records)
 	if !reflect.DeepEqual(result, expected) {
