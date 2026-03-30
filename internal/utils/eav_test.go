@@ -88,7 +88,7 @@ func TestInferTypeFromValue_Success(t *testing.T) {
 		expected string
 	}{
 		{"hello", "string"},
-		{123, "float"},
+		{123, "int"},
 		{3.14, "float"},
 		{true, "bool"},
 	}

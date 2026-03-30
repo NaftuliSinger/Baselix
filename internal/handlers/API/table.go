@@ -34,7 +34,6 @@ func GetTables(c *gin.Context) {
 		}
 
 		tablesResponse = append(tablesResponse, types.TableResponse{
-			ID:     entity.ID.String(),
 			Name:   entity.Name,
 			Fields: fieldsMap,
 		})
@@ -74,7 +73,6 @@ func GetTable(c *gin.Context) {
 		fieldsMap[field.Name] = field.Type
 	}
 	response = types.TableResponse{
-		ID:     table.ID.String(),
 		Name:   table.Name,
 		Fields: fieldsMap,
 	}
