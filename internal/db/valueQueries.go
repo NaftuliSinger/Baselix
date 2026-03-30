@@ -11,13 +11,13 @@ import (
 )
 
 // NewValue creates a Value with only the relevant typed field set.
-// attributeType must match Field.Type ("string", "int", "float", "bool", "time", "json", "uuid").
-func NewValue(recordID uuid.UUID, fieldID uuid.UUID, attributeType string, val any) (*models.Value, error) {
+// fieldType must match Field.Type ("string", "int", "float", "bool", "time", "json", "uuid").
+func NewValue(recordID uuid.UUID, fieldID uuid.UUID, fieldType string, val any) (*models.Value, error) {
 	v := &models.Value{
 		RecordID: recordID,
 		FieldID:  fieldID,
 	}
-	switch strings.ToLower(attributeType) {
+	switch strings.ToLower(fieldType) {
 	case "string":
 		s, ok := val.(string)
 		if !ok {
@@ -73,7 +73,29 @@ func NewValue(recordID uuid.UUID, fieldID uuid.UUID, attributeType string, val a
 		}
 		v.ValueUUID = u
 	default:
-		return nil, fmt.Errorf("unknown attribute type: %q", attributeType)
+		return nil, fmt.Errorf("unknown field type: %q", fieldType)
 	}
 	return v, nil
+}
+
+// GetValue returns the value from the Value struct based on the field type.
+func GetValue(v *models.Value, fieldType string) any {
+	switch fieldType {
+	case "string":
+		return v.ValueString
+	case "int":
+		return v.ValueInt
+	case "float":
+		return v.ValueFloat
+	case "bool":
+		return v.ValueBool
+	case "time":
+		return v.ValueTime
+	case "json":
+		return v.ValueJSON
+	case "uuid":
+		return v.ValueUUID
+	default:
+		return nil
+	}
 }

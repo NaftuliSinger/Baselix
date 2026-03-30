@@ -1,7 +1,10 @@
 package utils
 
 import (
+	"baselix/internal/db"
 	"baselix/internal/models"
+	"baselix/internal/types"
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
@@ -62,4 +65,24 @@ func InferSchemaFromRecords(records []map[string]any) map[string]interface{} {
 		}
 	}
 	return schema
+}
+
+func MapRecordModelToRecordResponse(record *models.Record) types.RecordResponse {
+	values := make(map[string]any, len(record.Values))
+	for _, v := range record.Values {
+		raw := db.GetValue(v, v.Field.Type)
+		if v.Field.Type == "json" {
+			if s, ok := raw.(string); ok && s != "" {
+				var parsed map[string]any
+				if err := json.Unmarshal([]byte(s), &parsed); err == nil {
+					raw = parsed
+				}
+			}
+		}
+		values[v.Field.Name] = raw
+	}
+	return types.RecordResponse{
+		ID:     record.ID.String(),
+		Values: values,
+	}
 }

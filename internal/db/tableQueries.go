@@ -63,6 +63,20 @@ func GetTableWithFields(ctx context.Context, projectID uuid.UUID, tableName stri
 	return &table, nil
 }
 
+func GetTableByName(ctx context.Context, projectID uuid.UUID, tableName string) (*models.Table, error) {
+	var table models.Table
+	err := DB.NewSelect().
+		Model(&table).
+		Where("name = ? AND project_id = ?", tableName, projectID).
+		Limit(config.Cfg.MaxSelectLimit).
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &table, nil
+}
+
 func ExistsOrCreateTable(ctx context.Context, projectID uuid.UUID, tableName string, fields []models.Field) (table *models.Table, created bool, err error) {
 	table, err = GetTableWithFields(ctx, projectID, tableName)
 	if err != nil {

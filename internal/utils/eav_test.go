@@ -2,8 +2,11 @@ package utils
 
 import (
 	"baselix/internal/models"
+	"baselix/internal/types"
 	"reflect"
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 // Test RemoveIDFromSchemaMap
@@ -135,6 +138,63 @@ func TestInferSchemaFromRecords_UnknownType(t *testing.T) {
 		"age":  "float",
 	}
 	result := InferSchemaFromRecords(records)
+	if !reflect.DeepEqual(result, expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+// Test MapRecordToResponse
+// Success case: valid Record model should be mapped to RecordResponse
+func TestMapRecordToResponse_Success(t *testing.T) {
+	record := &models.Record{
+		ID: uuid.New(),
+		Values: []*models.Value{
+			{
+				Field:       &models.Field{Name: "name", Type: "string"},
+				ValueString: "Alice",
+			},
+			{
+				Field:    &models.Field{Name: "age", Type: "int"},
+				ValueInt: 30,
+			},
+		},
+	}
+	expected := types.RecordResponse{
+		ID: record.ID.String(),
+		Values: map[string]any{
+			"name": "Alice",
+			"age":  30,
+		},
+	}
+	result := MapRecordModelToRecordResponse(record)
+	if !reflect.DeepEqual(result, expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+// Failure case: Record with unknown field types should return nil values for those fields
+func TestMapRecordToResponse_UnknownFieldType(t *testing.T) {
+	record := &models.Record{
+		ID: uuid.New(),
+		Values: []*models.Value{
+			{
+				Field:       &models.Field{Name: "name", Type: "string"},
+				ValueString: "Alice",
+			},
+			{
+				Field:       &models.Field{Name: "data", Type: "unknown"},
+				ValueString: "unknown",
+			},
+		},
+	}
+	expected := types.RecordResponse{
+		ID: record.ID.String(),
+		Values: map[string]any{
+			"name": "Alice",
+			"data": nil, // unknown type should result in nil value
+		},
+	}
+	result := MapRecordModelToRecordResponse(record)
 	if !reflect.DeepEqual(result, expected) {
 		t.Errorf("Expected %v, got %v", expected, result)
 	}

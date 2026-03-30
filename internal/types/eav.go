@@ -15,3 +15,8 @@ type TableResponse struct {
 	Name   string            `json:"name"`
 	Fields map[string]string `json:"fields"`
 }
+
+type RecordResponse struct {
+	ID     string         `json:"id"`
+	Values map[string]any `json:"values"`
+}

@@ -43,20 +43,31 @@ func New() *gin.Engine {
 	// V1 API endpoints
 	v1 := api.Group("/v1")
 
-	// Table endpoints
+	// Show all tables for a project
 	v1.GET("/tables", apiHandlers.GetTables)
-	v1.GET("/tables/:name", apiHandlers.GetTable)
-	v1.POST("/tables/:name", apiHandlers.CreateTable)
-	v1.PUT("/tables/:name", apiHandlers.UpdateTable)
-	v1.DELETE("/tables/:name", apiHandlers.DeleteTable)
 
-	// Record endpoints
-	records := v1.Group("/tables/:name/records")
+	// Record endpoints (primary resource)
+	records := v1.Group("/tables/:name")
 	{
-		// Get and with filtering & sorting
-		// Post with single or multiple records, if table doesn't exist, create it and infer schema
-		records.POST("", apiHandlers.CreateSingleOrMultipleRecords) // POST /tables/:name/records
-		// put, delete
+		// TODO: implement filtering and sorting
+		records.GET("", apiHandlers.GetRecords)
+
+		// Get single record by ID
+		records.GET("/:id", apiHandlers.GetRecordByID)
+
+		// Create single or multiple records (upsert-like behavior), inferring schema and creating table if needed
+		records.POST("", apiHandlers.CreateSingleOrMultipleRecords)
+		// records.PUT("/:id", apiHandlers.UpdateRecordByID)
+		// records.DELETE("/:id", apiHandlers.DeleteRecordByID)
+	}
+
+	// Schema endpoints (table definition)
+	schema := v1.Group("/tables/:name/schema")
+	{
+		schema.GET("", apiHandlers.GetTable)
+		schema.POST("", apiHandlers.CreateTable)
+		schema.PUT("", apiHandlers.UpdateTable)
+		schema.DELETE("", apiHandlers.DeleteTable)
 	}
 
 	return r

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"baselix/internal/config"
 	"baselix/internal/models"
 	"context"
 	"fmt"
@@ -51,4 +52,33 @@ func InsertRecords(ctx context.Context, records []*models.Record) ([]*models.Rec
 	}
 
 	return records, nil
+}
+
+func GetRecordsByTableID(ctx context.Context, projectID uuid.UUID, tableID uuid.UUID) ([]*models.Record, error) {
+	var records []*models.Record
+	err := DB.NewSelect().
+		Model(&records).
+		Where("table_id = ? AND project_id = ?", tableID, projectID).
+		Relation("Values").
+		Relation("Values.Field").
+		Limit(config.Cfg.MaxSelectLimit).
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return records, nil
+}
+
+func GetRecordByID(ctx context.Context, projectID uuid.UUID, recordID uuid.UUID) (*models.Record, error) {
+	var record models.Record
+	err := DB.NewSelect().
+		Model(&record).
+		Where("id = ? AND project_id = ?", recordID, projectID).
+		Relation("Values").
+		Relation("Values.Field").
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &record, nil
 }
