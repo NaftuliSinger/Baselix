@@ -28,12 +28,11 @@ func ConvertSchemaMapToFields(m map[string]interface{}) []models.Field {
 }
 
 func InferTypeFromValue(value any) string {
+	// In our case we treat all numbers as float for simplicity
 	switch value.(type) {
 	case string:
 		return "string"
-	case int, int8, int16, int32, int64:
-		return "int"
-	case float32, float64:
+	case float32, float64, int, int8, int16, int32, int64:
 		return "float"
 	case bool:
 		return "bool"
@@ -54,7 +53,11 @@ func InferSchemaFromRecords(records []map[string]any) map[string]interface{} {
 	for _, data := range records {
 		for key, value := range data {
 			if _, exists := schema[key]; !exists {
-				schema[key] = InferTypeFromValue(value)
+				valueType := InferTypeFromValue(value)
+				if valueType == "unknown" {
+					continue // skip fields with unknown types
+				}
+				schema[key] = valueType
 			}
 		}
 	}

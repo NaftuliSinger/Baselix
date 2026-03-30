@@ -40,6 +40,8 @@ func CreateSingleOrMultipleRecords(c *gin.Context) {
 		records = []map[string]any{single}
 	}
 
+	utils.Debug(fmt.Sprintf("Received body, parsed %v records", records), true)
+
 	if len(records) == 0 {
 		utils.ApiError(c, http.StatusBadRequest, "no records provided")
 		return
