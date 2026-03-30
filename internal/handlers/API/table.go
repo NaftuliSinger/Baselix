@@ -5,7 +5,6 @@ import (
 	"baselix/internal/middleware"
 	"baselix/internal/types"
 	"baselix/internal/utils"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,8 +16,6 @@ func GetTables(c *gin.Context) {
 		utils.ApiError(c, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-
-	utils.Debug(fmt.Sprintf("Project key: %s", project.ID), false)
 
 	tables, err := db.GetProjectTablesWithFields(c, project.ID)
 
