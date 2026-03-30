@@ -224,7 +224,7 @@ func DeleteTable(ctx context.Context, projectID uuid.UUID, tableName string) (er
 		Column("id").
 		Where("name = ? AND project_id = ?", tableName, projectID).
 		Scan(ctx); err != nil {
-		return fmt.Errorf("table %q not found", tableName)
+		return err
 	}
 
 	// Delete values belonging to any record of this table.

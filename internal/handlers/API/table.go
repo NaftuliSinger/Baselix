@@ -18,35 +18,30 @@ func GetTables(c *gin.Context) {
 	}
 
 	tables, err := db.GetProjectTablesWithFields(c, project.ID)
+
 	if err != nil {
 		utils.ApiError(c, http.StatusInternalServerError, "failed to get tables: "+err.Error())
 		return
 	}
 
 	// map the entities to a response struct that only includes the fields we want to return
-	var response []types.TableResponse
+	var tablesResponse []types.TableResponse
+
 	for _, entity := range tables {
-		var fields []types.FieldResponse
+		fieldsMap := make(map[string]string)
 		for _, field := range entity.Fields {
-			fields = append(fields, types.FieldResponse{
-				Name: field.Name,
-				Type: field.Type,
-			})
+			fieldsMap[field.Name] = field.Type
 		}
-		response = append(response, types.TableResponse{
-			ID:   entity.ID.String(),
-			Name: entity.Name,
-			Project: types.ProjectResponse{
-				ID:          entity.Project.ID.String(),
-				Name:        entity.Project.Name,
-				Description: entity.Project.Description,
-			},
-			Fields: fields,
+
+		tablesResponse = append(tablesResponse, types.TableResponse{
+			ID:     entity.ID.String(),
+			Name:   entity.Name,
+			Fields: fieldsMap,
 		})
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"tables": response,
+		"tables": tablesResponse,
 	})
 }
 
@@ -61,28 +56,27 @@ func GetTable(c *gin.Context) {
 
 	table, err := db.GetTableWithFields(c, project.ID, tableName)
 	if err != nil {
+		// if no rows are returned, it means the table doesn't exist, so we return a 404
+		if err.Error() == "sql: no rows in result set" {
+			utils.ApiError(c, http.StatusNotFound, "table not found")
+			return
+		}
+
 		utils.ApiError(c, http.StatusInternalServerError, "failed to get tables: "+err.Error())
 		return
 	}
 
 	// map the entities to a response struct that only includes the fields we want to return
 	var response types.TableResponse
-	var fields []types.FieldResponse
+
+	fieldsMap := make(map[string]string)
 	for _, field := range table.Fields {
-		fields = append(fields, types.FieldResponse{
-			Name: field.Name,
-			Type: field.Type,
-		})
+		fieldsMap[field.Name] = field.Type
 	}
 	response = types.TableResponse{
-		ID:   table.ID.String(),
-		Name: table.Name,
-		Project: types.ProjectResponse{
-			ID:          table.Project.ID.String(),
-			Name:        table.Project.Name,
-			Description: table.Project.Description,
-		},
-		Fields: fields,
+		ID:     table.ID.String(),
+		Name:   table.Name,
+		Fields: fieldsMap,
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -179,6 +173,10 @@ func DeleteTable(c *gin.Context) {
 	err := db.DeleteTable(c, project.ID, tableName)
 
 	if err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			utils.ApiError(c, http.StatusNotFound, "table not found")
+			return
+		}
 		utils.ApiError(c, http.StatusInternalServerError, "failed to delete table: "+err.Error())
 		return
 	}

@@ -11,13 +11,7 @@ type ProjectResponse struct {
 }
 
 type TableResponse struct {
-	ID      string          `json:"id"`
-	Name    string          `json:"name"`
-	Project ProjectResponse `json:"project"`
-	Fields  []FieldResponse `json:"fields"`
-}
-
-type FieldResponse struct {
-	Name string `json:"name"`
-	Type string `json:"type"`
+	ID     string            `json:"id"`
+	Name   string            `json:"name"`
+	Fields map[string]string `json:"fields"`
 }
