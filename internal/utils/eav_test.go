@@ -117,7 +117,7 @@ func TestInferSchemaFromRecords_Success(t *testing.T) {
 	}
 	expected := map[string]interface{}{
 		"name":       "string",
-		"age":        "float",
+		"age":        "int",
 		"active":     "bool",
 		"score":      "float",
 		"created_at": "time",
@@ -138,7 +138,7 @@ func TestInferSchemaFromRecords_UnknownType(t *testing.T) {
 	}
 	expected := map[string]interface{}{
 		"name": "string",
-		"age":  "float",
+		"age":  "int",
 	}
 	result := InferSchemaFromRecords(records)
 	if !reflect.DeepEqual(result, expected) {
