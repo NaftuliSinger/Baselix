@@ -52,8 +52,14 @@ func InferTypeFromValue(value any) string {
 
 // InferSchemaFromRecords infers a unified schema from multiple records by merging all fields.
 func InferSchemaFromRecords(records []map[string]any) map[string]interface{} {
+	// clean the schema by removing any "id" fields, since we don't want to create a field for "id" in the table
+	cleanedRecords := make([]map[string]any, len(records))
+	for i, record := range records {
+		cleanedRecords[i] = RemoveIDFromSchemaMap(record)
+	}
+
 	schema := make(map[string]interface{})
-	for _, data := range records {
+	for _, data := range cleanedRecords {
 		for key, value := range data {
 			if _, exists := schema[key]; !exists {
 				valueType := InferTypeFromValue(value)
@@ -69,8 +75,11 @@ func InferSchemaFromRecords(records []map[string]any) map[string]interface{} {
 
 func MapRecordModelToRecordResponse(record *models.Record) types.RecordResponse {
 	values := make(map[string]any, len(record.Values))
+
 	for _, v := range record.Values {
 		raw := db.GetValue(v, v.Field.Type)
+
+		// If field type is JSON, unmarshal string into map
 		if v.Field.Type == "json" {
 			if s, ok := raw.(string); ok && s != "" {
 				var parsed map[string]any
@@ -79,10 +88,12 @@ func MapRecordModelToRecordResponse(record *models.Record) types.RecordResponse 
 				}
 			}
 		}
+
 		values[v.Field.Name] = raw
 	}
+
 	return types.RecordResponse{
 		ID:     record.ID.String(),
-		Values: values,
+		Values: values, // will be flattened when marshaled
 	}
 }

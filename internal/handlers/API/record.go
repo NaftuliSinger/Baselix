@@ -172,6 +172,6 @@ func GetRecordByID(c *gin.Context) {
 	result := utils.MapRecordModelToRecordResponse(record)
 
 	c.JSON(http.StatusOK, gin.H{
-		"record": result,
+		"records": result,
 	})
 }

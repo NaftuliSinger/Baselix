@@ -143,6 +143,21 @@ func TestInferSchemaFromRecords_UnknownType(t *testing.T) {
 	}
 }
 
+// Failure case: ID field should be removed from the schema
+func TestInferSchemaFromRecords_IDFieldRemoved(t *testing.T) {
+	records := []map[string]any{
+		{"id": "123", "name": "Alice"},
+		{"id": "456", "name": "Bob"},
+	}
+	expected := map[string]interface{}{
+		"name": "string",
+	}
+	result := InferSchemaFromRecords(records)
+	if !reflect.DeepEqual(result, expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
 // Test MapRecordToResponse
 // Success case: valid Record model should be mapped to RecordResponse
 func TestMapRecordToResponse_Success(t *testing.T) {

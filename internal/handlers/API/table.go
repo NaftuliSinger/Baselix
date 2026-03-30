@@ -80,7 +80,7 @@ func GetTable(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"table": response,
+		"tables": response,
 	})
 }
 
