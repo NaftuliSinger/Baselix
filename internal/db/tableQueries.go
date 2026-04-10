@@ -24,7 +24,7 @@ func GetProjectTablesWithFields(ctx context.Context, projectID uuid.UUID) ([]mod
 			return q.Column("id", "name")
 		}).
 		Relation("Fields", func(q *bun.SelectQuery) *bun.SelectQuery {
-			return q.Column("id", "table_id", "name", "type")
+			return q.Column("id", "table_id", "name", "type", "unique")
 		}).
 		Where("\"table\".project_id = ?", projectID).
 		Limit(config.Cfg.MaxSelectLimit).
@@ -50,7 +50,7 @@ func GetTableWithFields(ctx context.Context, projectID uuid.UUID, tableName stri
 			return q.Column("id", "name")
 		}).
 		Relation("Fields", func(q *bun.SelectQuery) *bun.SelectQuery {
-			return q.Column("id", "table_id", "name", "type")
+			return q.Column("id", "table_id", "name", "type", "unique")
 		}).
 		Where("\"table\".name = ?", tableName).
 		Where("\"table\".project_id = ?", projectID).

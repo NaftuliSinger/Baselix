@@ -5,6 +5,8 @@ import (
 	"baselix/internal/models"
 	"baselix/internal/types"
 	"encoding/json"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -15,19 +17,70 @@ func RemoveIDFromSchemaMap(m map[string]interface{}) map[string]interface{} {
 	return m
 }
 
-func ConvertSchemaMapToFields(m map[string]interface{}) []models.Field {
+func LowercaseSchemaMapValues(m map[string]interface{}) (map[string]interface{}, error) {
+	lowercased := make(map[string]interface{}, len(m))
+	for key, value := range m {
+		strValue, ok := value.(string)
+		if !ok {
+			return nil, fmt.Errorf("value for key %q is not a string", key)
+		}
+		lowercased[key] = strings.ToLower(strValue)
+	}
+	return lowercased, nil
+}
+
+func isUniqueFieldType(fieldName string) bool {
+	// if has suffix "_u"
+	return strings.HasSuffix(fieldName, "_u")
+}
+
+func StripUniqueSuffix(fieldName string) string {
+	return strings.TrimSuffix(fieldName, "_u")
+}
+
+func IsValidFieldType(fieldType string) bool {
+	switch fieldType {
+	case "string", "int", "float", "bool", "time", "json", "uuid":
+		return true
+	case "string_u", "int_u", "float_u", "uuid_u":
+		return true
+	default:
+		return false
+	}
+}
+
+func ConvertSchemaMapToFields(m map[string]interface{}) ([]models.Field, error) {
+	// lowercase the map
+	lowercased, err := LowercaseSchemaMapValues(m)
+	if err != nil {
+		return nil, err
+	}
+	m = lowercased
+
 	fields := make([]models.Field, 0, len(m))
 	for name, typ := range m {
+		// validate the type is one of the allowed types, if not return an error
+		if !IsValidFieldType(typ.(string)) {
+			return nil, fmt.Errorf("invalid field type for field %q: %q", name, typ)
+		}
+
+		// set unique to true if the type has a "_u" suffix, and remove the suffix from the type
+		unique := isUniqueFieldType(typ.(string))
+		if unique {
+			typ = StripUniqueSuffix(typ.(string))
+		}
+
 		attrType, ok := typ.(string)
 		if !ok {
 			continue
 		}
 		fields = append(fields, models.Field{
-			Name: name,
-			Type: attrType,
+			Name:   name,
+			Type:   attrType,
+			Unique: unique,
 		})
 	}
-	return fields
+	return fields, nil
 }
 
 func InferTypeFromValue(value any) string {
@@ -105,7 +158,7 @@ func MapRecordModelToRecordResponse(record *models.Record) types.RecordResponse 
 	values := make(map[string]any, len(record.Values))
 
 	for _, v := range record.Values {
-		raw := db.GetValue(v, v.Field.Type)
+		raw := db.GetValue(v, v.Field.Type, v.Field.Unique)
 
 		// If field type is JSON, unmarshal string into map
 		if v.Field.Type == "json" {

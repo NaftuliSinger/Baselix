@@ -19,6 +19,7 @@ type Table struct {
 	Project *Project  `bun:"rel:has-one,join:project_id=id" json:"project,omitempty"`
 	Fields  []*Field  `bun:"rel:has-many,join:id=table_id" json:"fields,omitempty"`
 	Records []*Record `bun:"rel:has-many,join:id=table_id" json:"records,omitempty"`
+	Values  []*Value  `bun:"rel:has-many,join:id=table_id" json:"values,omitempty"`
 }
 
 type Field struct {
@@ -28,6 +29,7 @@ type Field struct {
 	TableID uuid.UUID `bun:",type:uuid,notnull,unique:idx_table_name"` // part of composite unique
 	Name    string    `bun:"name,notnull,unique:idx_table_name"`       // part of composite unique
 	Type    string    `bun:"type,notnull"`
+	Unique  bool      `bun:"unique,notnull,default:false"`
 
 	// Relationships
 	Table  *Table   `bun:"rel:has-one,join:table_id=id" json:",omitempty"`
@@ -53,8 +55,9 @@ type Value struct {
 
 	ID uuid.UUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()"`
 
-	RecordID    uuid.UUID `bun:",type:uuid,notnull,unique:idx_record_field"` // part of composite unique
-	FieldID     uuid.UUID `bun:",type:uuid,notnull,unique:idx_record_field"` // part of composite unique
+	TableID     uuid.UUID `bun:"table_id,type:uuid,notnull"`
+	RecordID    uuid.UUID `bun:",type:uuid,notnull,unique:idx_record_field"`                                                                                                                    // part of composite unique
+	FieldID     uuid.UUID `bun:",type:uuid,notnull,unique:idx_record_field,unique:idx_field_unique_str,unique:idx_field_unique_int,unique:idx_field_unique_float,unique:idx_field_unique_uuid"` // part of multiple unique indexes
 	ValueString string    `bun:"value,nullzero"`
 	ValueInt    int       `bun:"value_int,nullzero"`
 	ValueFloat  float64   `bun:"value_float,nullzero"`
@@ -63,7 +66,15 @@ type Value struct {
 	ValueJSON   string    `bun:"value_json,nullzero"`
 	ValueUUID   uuid.UUID `bun:"value_uuid,type:uuid,nullzero"`
 
+	// Populated instead of Value* when Field.Unique=true.
+	// Each column pairs with FieldID to form a composite unique index per field.
+	UniqueValueString string    `bun:"unique_value_str,nullzero,unique:idx_field_unique_str"`
+	UniqueValueInt    int       `bun:"unique_value_int,nullzero,unique:idx_field_unique_int"`
+	UniqueValueFloat  float64   `bun:"unique_value_float,nullzero,unique:idx_field_unique_float"`
+	UniqueValueUUID   uuid.UUID `bun:"unique_value_uuid,type:uuid,nullzero,unique:idx_field_unique_uuid"`
+
 	// Relationships
+	Table  *Table  `bun:"rel:has-one,join:table_id=id" json:",omitempty"`
 	Record *Record `bun:"rel:has-one,join:record_id=id" json:",omitempty"`
 	Field  *Field  `bun:"rel:has-one,join:field_id=id" json:",omitempty"`
 }

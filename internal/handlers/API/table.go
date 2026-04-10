@@ -30,6 +30,10 @@ func GetTables(c *gin.Context) {
 	for _, entity := range tables {
 		fieldsMap := make(map[string]string)
 		for _, field := range entity.Fields {
+			if field.Unique {
+				fieldsMap[field.Name] = field.Type + "_u"
+				continue
+			}
 			fieldsMap[field.Name] = field.Type
 		}
 
@@ -70,6 +74,10 @@ func GetTable(c *gin.Context) {
 
 	fieldsMap := make(map[string]string)
 	for _, field := range table.Fields {
+		if field.Unique {
+			fieldsMap[field.Name] = field.Type + "_u"
+			continue
+		}
 		fieldsMap[field.Name] = field.Type
 	}
 	response = types.TableResponse{
@@ -104,7 +112,11 @@ func CreateTable(c *gin.Context) {
 
 	schemaClened := utils.RemoveIDFromSchemaMap(schema)
 
-	fields := utils.ConvertSchemaMapToFields(schemaClened)
+	fields, err := utils.ConvertSchemaMapToFields(schemaClened)
+	if err != nil {
+		utils.ApiError(c, http.StatusInternalServerError, "failed to convert schema to fields, error: "+err.Error())
+		return
+	}
 
 	newEntity, err := db.CreateTableWithFields(c, project.ID, tableName, fields)
 
@@ -142,7 +154,11 @@ func UpdateTable(c *gin.Context) {
 
 	schemaClened := utils.RemoveIDFromSchemaMap(schema)
 
-	fields := utils.ConvertSchemaMapToFields(schemaClened)
+	fields, err := utils.ConvertSchemaMapToFields(schemaClened)
+	if err != nil {
+		utils.ApiError(c, http.StatusInternalServerError, "failed to convert schema to fields, error: "+err.Error())
+		return
+	}
 
 	updatedTable, err := db.UpdateTableFields(c, tableName, fields)
 

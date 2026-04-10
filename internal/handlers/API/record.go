@@ -7,12 +7,14 @@ import (
 	"baselix/internal/types"
 	"baselix/internal/utils"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/uptrace/bun/driver/pgdriver"
 )
 
 func CreateSingleOrMultipleRecords(c *gin.Context) {
@@ -50,7 +52,11 @@ func CreateSingleOrMultipleRecords(c *gin.Context) {
 	schema := utils.InferSchemaFromRecords(records)
 
 	cleanedSchema := utils.RemoveIDFromSchemaMap(schema)
-	fields := utils.ConvertSchemaMapToFields(cleanedSchema)
+	fields, err := utils.ConvertSchemaMapToFields(cleanedSchema)
+	if err != nil {
+		utils.ApiError(c, http.StatusInternalServerError, "failed to convert schema to fields, error: "+err.Error())
+		return
+	}
 
 	// Ensure the table exists and get its details
 	table, newTableCreated, err := db.ExistsOrCreateTable(c, project.ID, tableName, fields)
@@ -83,12 +89,14 @@ func CreateSingleOrMultipleRecords(c *gin.Context) {
 				return
 			}
 			// get the type from field and pass into the next func
-			val, err := db.NewValue(rec.ID, field.ID, field.Type, value)
+			val, err := db.NewValue(table.ID, rec.ID, field.ID, field.Type, field.Unique, value)
 			if err != nil {
 				utils.ApiError(c, http.StatusInternalServerError, fmt.Sprintf("failed to create value for field %q, error: %v", key, err))
 				return
 			}
+
 			val.Field = field
+			val.Table = table
 			rec.Values = append(rec.Values, val)
 		}
 		modelRecords[i] = rec
@@ -96,7 +104,12 @@ func CreateSingleOrMultipleRecords(c *gin.Context) {
 
 	inserted, err := db.InsertRecords(c, modelRecords)
 	if err != nil {
-		utils.ApiError(c, http.StatusInternalServerError, "failed to insert records")
+		var pgErr pgdriver.Error
+		if errors.As(err, &pgErr) && pgErr.Field('C') == "23505" {
+			utils.ApiError(c, http.StatusBadRequest, "duplicate value: "+pgErr.Field('D'))
+			return
+		}
+		utils.ApiError(c, http.StatusInternalServerError, "failed to insert records, error: "+err.Error())
 		return
 	}
 

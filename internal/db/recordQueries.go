@@ -27,6 +27,7 @@ func InsertRecords(ctx context.Context, records []*models.Record) ([]*models.Rec
 
 	// Insert records; bun populates IDs via RETURNING
 	_, err = tx.NewInsert().Model(&records).Exec(ctx)
+
 	if err != nil {
 		return nil, err
 	}
