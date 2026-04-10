@@ -5,6 +5,7 @@ import (
 	"baselix/internal/middleware"
 	"baselix/internal/types"
 	"baselix/internal/utils"
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -28,18 +29,18 @@ func GetTables(c *gin.Context) {
 	var tablesResponse []types.TableResponse
 
 	for _, entity := range tables {
-		fieldsMap := make(map[string]string)
+		fields := make([]types.TableField, 0, len(entity.Fields))
 		for _, field := range entity.Fields {
+			val := field.Type
 			if field.Unique {
-				fieldsMap[field.Name] = field.Type + "_u"
-				continue
+				val = field.Type + "_u"
 			}
-			fieldsMap[field.Name] = field.Type
+			fields = append(fields, types.TableField{Key: field.Name, Value: val})
 		}
 
 		tablesResponse = append(tablesResponse, types.TableResponse{
 			Name:   entity.Name,
-			Fields: fieldsMap,
+			Fields: fields,
 		})
 	}
 
@@ -72,17 +73,17 @@ func GetTable(c *gin.Context) {
 	// map the entities to a response struct that only includes the fields we want to return
 	var response types.TableResponse
 
-	fieldsMap := make(map[string]string)
+	fields := make([]types.TableField, 0, len(table.Fields))
 	for _, field := range table.Fields {
+		val := field.Type
 		if field.Unique {
-			fieldsMap[field.Name] = field.Type + "_u"
-			continue
+			val = field.Type + "_u"
 		}
-		fieldsMap[field.Name] = field.Type
+		fields = append(fields, types.TableField{Key: field.Name, Value: val})
 	}
 	response = types.TableResponse{
 		Name:   table.Name,
-		Fields: fieldsMap,
+		Fields: fields,
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -110,15 +111,20 @@ func CreateTable(c *gin.Context) {
 
 	schema := requestBody.Schema
 
-	schemaClened := utils.RemoveIDFromSchemaMap(schema)
+	// Convert the inferred schema to Field models, which includes validation
+	fields, err := utils.ConvertSchemaMapToFields(schema)
 
-	fields, err := utils.ConvertSchemaMapToFields(schemaClened)
 	if err != nil {
-		utils.ApiError(c, http.StatusInternalServerError, "failed to convert schema to fields, error: "+err.Error())
-		return
+		var reservedErr *types.ResrvedFieldError
+		if errors.As(err, &reservedErr) {
+			utils.ApiError(c, http.StatusBadRequest, err.Error())
+			return
+		} else {
+			utils.ApiError(c, http.StatusInternalServerError, "failed to convert schema to fields, error: "+err.Error())
+			return
+		}
 	}
-
-	newEntity, err := db.CreateTableWithFields(c, project.ID, tableName, fields)
+	newTable, err := db.CreateTableWithFields(c, project.ID, tableName, fields)
 
 	if err != nil {
 		utils.ApiError(c, http.StatusInternalServerError, "failed to create table: "+err.Error())
@@ -127,8 +133,8 @@ func CreateTable(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":    "Table '" + tableName + "' created successfully for project '" + project.Name + "'",
-		"table_id":   newEntity.ID,
-		"table_name": newEntity.Name,
+		"table_id":   newTable.ID,
+		"table_name": newTable.Name,
 	})
 }
 
@@ -152,12 +158,18 @@ func UpdateTable(c *gin.Context) {
 
 	schema := requestBody.Schema
 
-	schemaClened := utils.RemoveIDFromSchemaMap(schema)
+	// Convert the inferred schema to Field models, which includes validation
+	fields, err := utils.ConvertSchemaMapToFields(schema)
 
-	fields, err := utils.ConvertSchemaMapToFields(schemaClened)
 	if err != nil {
-		utils.ApiError(c, http.StatusInternalServerError, "failed to convert schema to fields, error: "+err.Error())
-		return
+		var reservedErr *types.ResrvedFieldError
+		if errors.As(err, &reservedErr) {
+			utils.ApiError(c, http.StatusBadRequest, err.Error())
+			return
+		} else {
+			utils.ApiError(c, http.StatusInternalServerError, "failed to convert schema to fields, error: "+err.Error())
+			return
+		}
 	}
 
 	updatedTable, err := db.UpdateTableFields(c, tableName, fields)

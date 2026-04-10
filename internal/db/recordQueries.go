@@ -3,11 +3,26 @@ package db
 import (
 	"baselix/internal/config"
 	"baselix/internal/models"
+	"baselix/internal/types"
 	"context"
+	"errors"
 	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/google/uuid"
+	"github.com/uptrace/bun/driver/pgdriver"
 )
+
+var uniqueViolationRe = regexp.MustCompile(`Key \((.+?)\)=\((.+?)\)`)
+
+func parseUniqueViolationDetail(detail string) (value string) {
+	// detail format: 'Key (field_name)=(value) already exists.'
+	if m := uniqueViolationRe.FindStringSubmatch(detail); len(m) == 3 {
+		return m[2]
+	}
+	return "unknown"
+}
 
 func InsertRecords(ctx context.Context, records []*models.Record) ([]*models.Record, error) {
 	if len(records) == 0 {
@@ -44,6 +59,29 @@ func InsertRecords(ctx context.Context, records []*models.Record) ([]*models.Rec
 	if len(allValues) > 0 {
 		_, err = tx.NewInsert().Model(&allValues).Exec(ctx)
 		if err != nil {
+			// if error is a unique violation, we want to return a custom error with the field name and value that caused the violation
+			var pgErr pgdriver.Error
+			if errors.As(err, &pgErr) && pgErr.Field('C') == "23505" {
+				// Detail format for composite unique index: "Key (field_id, unique_value_str)=(uuid, actual-value) already exists."
+				// m[1] = column names, m[2] = corresponding values
+				rawValues := parseUniqueViolationDetail(pgErr.Field('D'))
+				parts := strings.SplitN(rawValues, ", ", 2)
+
+				var fieldNameStr, dupValue string
+				if len(parts) == 2 {
+					dupValue = strings.TrimSpace(parts[1])
+					if fieldID, err := uuid.Parse(strings.TrimSpace(parts[0])); err == nil {
+						for _, v := range allValues {
+							if v.FieldID == fieldID && v.Field != nil {
+								fieldNameStr = v.Field.Name
+								break
+							}
+						}
+					}
+				}
+
+				return nil, &types.UniqueDuplicateValueError{FieldName: fieldNameStr, Value: dupValue}
+			}
 			return nil, err
 		}
 	}

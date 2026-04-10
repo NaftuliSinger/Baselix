@@ -39,6 +39,8 @@ type Field struct {
 type Record struct {
 	bun.BaseModel `bun:"table:records"`
 	ID            uuid.UUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()"`
+	CreatedAt     time.Time `bun:"created_at,notnull,default:current_timestamp"`
+	UpdatedAt     time.Time `bun:"updated_at,notnull,default:current_timestamp"`
 
 	ProjectID uuid.UUID `bun:",type:uuid,notnull"`
 

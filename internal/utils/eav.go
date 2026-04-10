@@ -12,11 +12,6 @@ import (
 	"github.com/google/uuid"
 )
 
-func RemoveIDFromSchemaMap(m map[string]interface{}) map[string]interface{} {
-	delete(m, "id")
-	return m
-}
-
 func LowercaseSchemaMapValues(m map[string]interface{}) (map[string]interface{}, error) {
 	lowercased := make(map[string]interface{}, len(m))
 	for key, value := range m {
@@ -29,13 +24,25 @@ func LowercaseSchemaMapValues(m map[string]interface{}) (map[string]interface{},
 	return lowercased, nil
 }
 
-func isUniqueFieldType(fieldName string) bool {
-	// if has suffix "_u"
-	return strings.HasSuffix(fieldName, "_u")
-}
+func CheckForReservedFields(m map[string]interface{}) error {
+	/* if the map has any of the following, return an error
+	- "id"
+	- "created_at"
+	- "updated_at"
+	*/
 
-func StripUniqueSuffix(fieldName string) string {
-	return strings.TrimSuffix(fieldName, "_u")
+	switch {
+	case m["id"] != nil:
+		// return custom error
+		return &types.ResrvedFieldError{FieldName: "id"}
+	case m["created_at"] != nil:
+		return &types.ResrvedFieldError{FieldName: "created_at"}
+	case m["updated_at"] != nil:
+		return &types.ResrvedFieldError{FieldName: "updated_at"}
+	default:
+		return nil
+	}
+
 }
 
 func IsValidFieldType(fieldType string) bool {
@@ -49,6 +56,15 @@ func IsValidFieldType(fieldType string) bool {
 	}
 }
 
+func isUniqueFieldType(fieldName string) bool {
+	// if has suffix "_u"
+	return strings.HasSuffix(fieldName, "_u")
+}
+
+func StripUniqueSuffix(fieldName string) string {
+	return strings.TrimSuffix(fieldName, "_u")
+}
+
 func ConvertSchemaMapToFields(m map[string]interface{}) ([]models.Field, error) {
 	// lowercase the map
 	lowercased, err := LowercaseSchemaMapValues(m)
@@ -56,6 +72,12 @@ func ConvertSchemaMapToFields(m map[string]interface{}) ([]models.Field, error) 
 		return nil, err
 	}
 	m = lowercased
+
+	// check for reserved field names
+	err = CheckForReservedFields(m)
+	if err != nil {
+		return nil, err
+	}
 
 	fields := make([]models.Field, 0, len(m))
 	for name, typ := range m {
@@ -133,14 +155,8 @@ func InferTypeFromValue(value any) string {
 
 // InferSchemaFromRecords infers a unified schema from multiple records by merging all fields.
 func InferSchemaFromRecords(records []map[string]any) map[string]interface{} {
-	// clean the schema by removing any "id" fields, since we don't want to create a field for "id" in the table
-	cleanedRecords := make([]map[string]any, len(records))
-	for i, record := range records {
-		cleanedRecords[i] = RemoveIDFromSchemaMap(record)
-	}
-
 	schema := make(map[string]interface{})
-	for _, data := range cleanedRecords {
+	for _, data := range records {
 		for key, value := range data {
 			if _, exists := schema[key]; !exists {
 				valueType := InferTypeFromValue(value)
@@ -155,7 +171,7 @@ func InferSchemaFromRecords(records []map[string]any) map[string]interface{} {
 }
 
 func MapRecordModelToRecordResponse(record *models.Record) types.RecordResponse {
-	values := make(map[string]any, len(record.Values))
+	values := make([]types.RecordField, 0, len(record.Values))
 
 	for _, v := range record.Values {
 		raw := db.GetValue(v, v.Field.Type, v.Field.Unique)
@@ -170,11 +186,13 @@ func MapRecordModelToRecordResponse(record *models.Record) types.RecordResponse 
 			}
 		}
 
-		values[v.Field.Name] = raw
+		values = append(values, types.RecordField{Key: v.Field.Name, Value: raw})
 	}
 
 	return types.RecordResponse{
-		ID:     record.ID.String(),
-		Values: values, // will be flattened when marshaled
+		ID:        record.ID.String(),
+		CreatedAt: record.CreatedAt,
+		UpdatedAt: record.UpdatedAt,
+		Values:    values,
 	}
 }

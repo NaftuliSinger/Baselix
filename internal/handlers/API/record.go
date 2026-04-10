@@ -14,7 +14,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/uptrace/bun/driver/pgdriver"
 )
 
 func CreateSingleOrMultipleRecords(c *gin.Context) {
@@ -51,11 +50,18 @@ func CreateSingleOrMultipleRecords(c *gin.Context) {
 	// Infer schema from all records combined, then create/get the table
 	schema := utils.InferSchemaFromRecords(records)
 
-	cleanedSchema := utils.RemoveIDFromSchemaMap(schema)
-	fields, err := utils.ConvertSchemaMapToFields(cleanedSchema)
+	// Convert the inferred schema to Field models, which includes validation
+	fields, err := utils.ConvertSchemaMapToFields(schema)
+
 	if err != nil {
-		utils.ApiError(c, http.StatusInternalServerError, "failed to convert schema to fields, error: "+err.Error())
-		return
+		var reservedErr *types.ResrvedFieldError
+		if errors.As(err, &reservedErr) {
+			utils.ApiError(c, http.StatusBadRequest, err.Error())
+			return
+		} else {
+			utils.ApiError(c, http.StatusInternalServerError, "failed to convert schema to fields, error: "+err.Error())
+			return
+		}
 	}
 
 	// Ensure the table exists and get its details
@@ -104,9 +110,9 @@ func CreateSingleOrMultipleRecords(c *gin.Context) {
 
 	inserted, err := db.InsertRecords(c, modelRecords)
 	if err != nil {
-		var pgErr pgdriver.Error
-		if errors.As(err, &pgErr) && pgErr.Field('C') == "23505" {
-			utils.ApiError(c, http.StatusBadRequest, "duplicate value: "+pgErr.Field('D'))
+		var uniqueErr *types.UniqueDuplicateValueError
+		if errors.As(err, &uniqueErr) {
+			utils.ApiError(c, http.StatusBadRequest, uniqueErr.Error())
 			return
 		}
 		utils.ApiError(c, http.StatusInternalServerError, "failed to insert records, error: "+err.Error())

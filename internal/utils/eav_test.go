@@ -3,42 +3,14 @@ package utils
 import (
 	"baselix/internal/models"
 	"baselix/internal/types"
+	"fmt"
 	"reflect"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 )
-
-// Test RemoveIDFromSchemaMap
-// Success case: map with "id" key should have it removed
-func TestRemoveIDFromSchemaMap_WithID(t *testing.T) {
-	input := map[string]interface{}{
-		"id":   "123",
-		"name": "Alice",
-	}
-	expected := map[string]interface{}{
-		"name": "Alice",
-	}
-	result := RemoveIDFromSchemaMap(input)
-	if !reflect.DeepEqual(result, expected) {
-		t.Errorf("Expected %v, got %v", expected, result)
-	}
-}
-
-// Failure case: map without "id" key should remain unchanged
-func TestRemoveIDFromSchemaMap_NoID(t *testing.T) {
-	input := map[string]interface{}{
-		"name": "Bob",
-	}
-	expected := map[string]interface{}{
-		"name": "Bob",
-	}
-	result := RemoveIDFromSchemaMap(input)
-	if !reflect.DeepEqual(result, expected) {
-		t.Errorf("Expected %v, got %v", expected, result)
-	}
-}
 
 // Test LowercaseSchemaMapValues
 // Success case: map with mixed case keys should be converted to lowercase
@@ -76,6 +48,43 @@ func TestLowercaseSchemaMapValues_Lowercase(t *testing.T) {
 	}
 	if !reflect.DeepEqual(result, expected) {
 		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+// Test CheckForReservedFields
+// Success case: map with "id" key should have it removed
+func TestCheckForReservedFields_Success(t *testing.T) {
+	// multiple examples (id, created_at, updated_at)
+	inputs := []map[string]interface{}{
+		{"id": "123", "name": "Alice"},
+		{"created_at": "2026-03-30T10:00:00Z", "name": "Bob"},
+		{"updated_at": "2026-03-30T10:00:00Z", "name": "Charlie"},
+	}
+
+	// expected list of errors for each case
+	expected := []error{
+		fmt.Errorf("field name 'id' is reserved and cannot be used"),
+		fmt.Errorf("field name 'created_at' is reserved and cannot be used"),
+		fmt.Errorf("field name 'updated_at' is reserved and cannot be used"),
+	}
+
+	for i, input := range inputs {
+		result := CheckForReservedFields(input)
+		if result == nil || result.Error() != expected[i].Error() {
+			t.Errorf("Expected %v, got %v", expected[i], result)
+		}
+	}
+}
+
+// Failure case: map without "id" key should remain unchanged
+func TestCheckForReservedFields_Failure(t *testing.T) {
+	input := map[string]interface{}{
+		"name": "Bob",
+	}
+	// expect no error
+	result := CheckForReservedFields(input)
+	if result != nil {
+		t.Errorf("Expected nil, got %v", result)
 	}
 }
 
@@ -179,6 +188,20 @@ func TestConvertSchemaMapToFields_WithValidSchema(t *testing.T) {
 	}
 }
 
+// Failure case: using reserved field names should return an error
+func TestConvertSchemaMapToFields_ReservedFieldNames(t *testing.T) {
+	input := map[string]interface{}{
+		"id":         "string",
+		"created_at": "time",
+		"updated_at": "time",
+	}
+	// expect an error due to reserved field names
+	_, err := ConvertSchemaMapToFields(input)
+	if err == nil {
+		t.Errorf("Expected error due to reserved field names, got nil")
+	}
+}
+
 // Failure case: invalid type in schema map should be skipped
 func TestConvertSchemaMapToFields_InvalidType(t *testing.T) {
 	input := map[string]interface{}{
@@ -258,26 +281,14 @@ func TestInferSchemaFromRecords_UnknownType(t *testing.T) {
 	}
 }
 
-// Failure case: ID field should be removed from the schema
-func TestInferSchemaFromRecords_IDFieldRemoved(t *testing.T) {
-	records := []map[string]any{
-		{"id": "123", "name": "Alice"},
-		{"id": "456", "name": "Bob"},
-	}
-	expected := map[string]interface{}{
-		"name": "string",
-	}
-	result := InferSchemaFromRecords(records)
-	if !reflect.DeepEqual(result, expected) {
-		t.Errorf("Expected %v, got %v", expected, result)
-	}
-}
-
 // Test MapRecordToResponse
 // Success case: valid Record model should be mapped to RecordResponse
 func TestMapRecordToResponse_Success(t *testing.T) {
 	record := &models.Record{
-		ID: uuid.New(),
+		// use a random UUID and a fixed timestamp for testing
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 		Values: []*models.Value{
 			{
 				Field:       &models.Field{Name: "name", Type: "string"},
@@ -290,10 +301,12 @@ func TestMapRecordToResponse_Success(t *testing.T) {
 		},
 	}
 	expected := types.RecordResponse{
-		ID: record.ID.String(),
-		Values: map[string]any{
-			"name": "Alice",
-			"age":  30,
+		ID:        record.ID.String(),
+		CreatedAt: record.CreatedAt,
+		UpdatedAt: record.UpdatedAt,
+		Values: []types.RecordField{
+			{Key: "name", Value: "Alice"},
+			{Key: "age", Value: 30},
 		},
 	}
 	result := MapRecordModelToRecordResponse(record)
@@ -305,7 +318,10 @@ func TestMapRecordToResponse_Success(t *testing.T) {
 // Failure case: Record with unknown field types should return nil values for those fields
 func TestMapRecordToResponse_UnknownFieldType(t *testing.T) {
 	record := &models.Record{
-		ID: uuid.New(),
+		// use a random UUID and a fixed timestamp for testing
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 		Values: []*models.Value{
 			{
 				Field:       &models.Field{Name: "name", Type: "string"},
@@ -318,10 +334,12 @@ func TestMapRecordToResponse_UnknownFieldType(t *testing.T) {
 		},
 	}
 	expected := types.RecordResponse{
-		ID: record.ID.String(),
-		Values: map[string]any{
-			"name": "Alice",
-			"data": nil, // unknown type should result in nil value
+		ID:        record.ID.String(),
+		CreatedAt: record.CreatedAt,
+		UpdatedAt: record.UpdatedAt,
+		Values: []types.RecordField{
+			{Key: "name", Value: "Alice"},
+			{Key: "data", Value: nil}, // unknown type should result in nil value
 		},
 	}
 	result := MapRecordModelToRecordResponse(record)
