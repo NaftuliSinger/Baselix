@@ -3,7 +3,6 @@ package utils
 import (
 	"baselix/internal/models"
 	"baselix/internal/types"
-	"fmt"
 	"reflect"
 	"sort"
 	"testing"
@@ -63,9 +62,9 @@ func TestCheckForReservedFields_Success(t *testing.T) {
 
 	// expected list of errors for each case
 	expected := []error{
-		fmt.Errorf("field name 'id' is reserved and cannot be used"),
-		fmt.Errorf("field name 'created_at' is reserved and cannot be used"),
-		fmt.Errorf("field name 'updated_at' is reserved and cannot be used"),
+		&types.ResrvedFieldError{FieldName: "id"},
+		&types.ResrvedFieldError{FieldName: "created_at"},
+		&types.ResrvedFieldError{FieldName: "updated_at"},
 	}
 
 	for i, input := range inputs {
