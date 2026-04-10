@@ -222,7 +222,7 @@ func TestInferTypeFromValue_Success(t *testing.T) {
 		expected string
 	}{
 		{"hello", "string"},
-		{123, "int"},
+		{123, "float"},
 		{3.14, "float"},
 		{true, "bool"},
 	}
@@ -251,7 +251,7 @@ func TestInferSchemaFromRecords_Success(t *testing.T) {
 	}
 	expected := map[string]interface{}{
 		"name":       "string",
-		"age":        "int",
+		"age":        "float",
 		"active":     "bool",
 		"score":      "float",
 		"created_at": "time",
@@ -272,7 +272,7 @@ func TestInferSchemaFromRecords_UnknownType(t *testing.T) {
 	}
 	expected := map[string]interface{}{
 		"name": "string",
-		"age":  "int",
+		"age":  "float",
 	}
 	result := InferSchemaFromRecords(records)
 	if !reflect.DeepEqual(result, expected) {

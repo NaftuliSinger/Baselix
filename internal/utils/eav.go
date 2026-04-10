@@ -121,19 +121,7 @@ func InferTypeFromValue(value any) string {
 		// Otherwise treat as string
 		return "string"
 
-	case int, int8, int16, int32, int64:
-		return "int"
-
-	case float32:
-		if v == float32(int64(v)) {
-			return "int"
-		}
-		return "float"
-
-	case float64:
-		if v == float64(int64(v)) {
-			return "int"
-		}
+	case int, int8, int16, int32, int64, float32, float64:
 		return "float"
 
 	case bool:
