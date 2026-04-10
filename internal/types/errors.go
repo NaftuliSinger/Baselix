@@ -6,7 +6,15 @@ type UniqueDuplicateValueError struct {
 }
 
 func (e *UniqueDuplicateValueError) Error() string {
-	return "duplicate value: \"" + e.Value + "\" for unique field: " + e.FieldName
+	return "duplicate value: '" + e.Value + "' for unique field: " + e.FieldName
+}
+
+type TableAlreadyExistsError struct {
+	TableName string
+}
+
+func (e *TableAlreadyExistsError) Error() string {
+	return "table '" + e.TableName + "' already exists"
 }
 
 type ResrvedFieldError struct {

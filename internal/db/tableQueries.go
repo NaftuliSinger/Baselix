@@ -3,11 +3,14 @@ package db
 import (
 	"baselix/internal/config"
 	"baselix/internal/models"
+	"baselix/internal/types"
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/driver/pgdriver"
 )
 
 func GetProjectTablesWithFields(ctx context.Context, projectID uuid.UUID) ([]models.Table, error) {
@@ -109,6 +112,10 @@ func CreateTableWithFields(ctx context.Context, projectID uuid.UUID, tableName s
 		Name:      tableName,
 	}
 	if _, err = tx.NewInsert().Model(table).Exec(ctx); err != nil {
+		var pgErr pgdriver.Error
+		if errors.As(err, &pgErr) && pgErr.Field('C') == "23505" {
+			return nil, &types.TableAlreadyExistsError{TableName: tableName}
+		}
 		return nil, err
 	}
 

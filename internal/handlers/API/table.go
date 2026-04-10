@@ -127,7 +127,12 @@ func CreateTable(c *gin.Context) {
 	newTable, err := db.CreateTableWithFields(c, project.ID, tableName, fields)
 
 	if err != nil {
-		utils.ApiError(c, http.StatusInternalServerError, "failed to create table: "+err.Error())
+		var tableExistsErr *types.TableAlreadyExistsError
+		if errors.As(err, &tableExistsErr) {
+			utils.ApiError(c, http.StatusBadRequest, err.Error())
+		} else {
+			utils.ApiError(c, http.StatusInternalServerError, "failed to create table: "+err.Error())
+		}
 		return
 	}
 
