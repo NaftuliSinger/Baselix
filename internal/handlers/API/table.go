@@ -161,6 +161,12 @@ func UpdateTable(c *gin.Context) {
 		return
 	}
 
+	allow_destructive := requestBody.AllowDestructive
+	if !allow_destructive {
+		utils.ApiError(c, http.StatusBadRequest, "Warning, this route will perform destructive changes (refer to the API documentation for more details). Destructive changes are not allowed without 'allow_destructive' flag set to true")
+		return
+	}
+
 	schema := requestBody.Schema
 
 	// Convert the inferred schema to Field models, which includes validation

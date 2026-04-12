@@ -7,7 +7,8 @@ import (
 )
 
 type SchemaRequestBody struct {
-	Schema map[string]any `json:"schema"`
+	Schema           map[string]any `json:"schema"`
+	AllowDestructive bool           `json:"allow_destructive,omitempty"`
 }
 
 type ProjectResponse struct {
