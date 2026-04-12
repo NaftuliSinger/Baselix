@@ -100,7 +100,7 @@ func UpdateRecordsByID(ctx context.Context, projectID uuid.UUID, tableName strin
 		return nil, nil
 	}
 
-	table, err := GetTableWithFields(ctx, projectID, tableName)
+	table, err := GetTableWithFieldsByName(ctx, projectID, tableName)
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +173,7 @@ func UpdateRecordsByID(ctx context.Context, projectID uuid.UUID, tableName strin
 	_, err = tx.NewInsert().
 		Model(&allValues).
 		On("CONFLICT (record_id, field_id) DO UPDATE").
-		Set("value = EXCLUDED.value").
+		Set("value_str = EXCLUDED.value_str").
 		Set("value_int = EXCLUDED.value_int").
 		Set("value_float = EXCLUDED.value_float").
 		Set("value_bool = EXCLUDED.value_bool").
@@ -237,13 +237,13 @@ func UpdateRecordsByID(ctx context.Context, projectID uuid.UUID, tableName strin
 
 func GetRecordsByTableID(ctx context.Context, projectID uuid.UUID, tableID uuid.UUID) ([]*models.Record, error) {
 	var records []*models.Record
-	err := DB.NewSelect().
+	q := DB.NewSelect().
 		Model(&records).
 		Where("table_id = ? AND project_id = ?", tableID, projectID).
 		Relation("Values").
 		Relation("Values.Field").
-		Limit(config.Cfg.MaxSelectLimit).
-		Scan(ctx)
+		Limit(config.Cfg.MaxSelectLimit)
+	err := q.Scan(ctx)
 	if err != nil {
 		return nil, err
 	}

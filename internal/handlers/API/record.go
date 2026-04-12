@@ -207,11 +207,29 @@ func GetRecords(c *gin.Context) {
 
 	tableName := c.Param("name")
 
-	table, err := db.GetTableByName(c, project.ID, tableName)
+	table, err := db.GetTableWithFieldsByName(c, project.ID, tableName)
 	if err != nil {
 		utils.ApiError(c, http.StatusNotFound, "table not found")
 		return
 	}
+
+	query := c.Request.URL.Query()
+
+	filterStr := query.Get("filter")
+	sortStr := query.Get("sort")
+
+	filters, err := types.ParseFilters(filterStr)
+	if err != nil {
+		utils.ApiError(c, http.StatusBadRequest, "invalid filter format: "+err.Error())
+		return
+	}
+	sorts, err := types.ParseSorts(sortStr)
+	if err != nil {
+		utils.ApiError(c, http.StatusBadRequest, "invalid sort format: "+err.Error())
+		return
+	}
+
+	_ = filters // TODO: implement filtering in DB query
 
 	records, err := db.GetRecordsByTableID(c, project.ID, table.ID)
 	if err != nil {
@@ -224,8 +242,15 @@ func GetRecords(c *gin.Context) {
 		result[i] = utils.MapRecordModelToRecordResponse(rec)
 	}
 
+	// Apply sorts (in memory) after fetching from DB
+	resultSorted, err := types.ApplySorts(result, sorts)
+	if err != nil {
+		utils.ApiError(c, http.StatusBadRequest, "invalid sort field: "+err.Error())
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"records": result,
+		"records": resultSorted,
 	})
 }
 

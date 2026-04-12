@@ -58,7 +58,7 @@ func GetTable(c *gin.Context) {
 
 	tableName := c.Param("name")
 
-	table, err := db.GetTableWithFields(c, project.ID, tableName)
+	table, err := db.GetTableWithFieldsByName(c, project.ID, tableName)
 	if err != nil {
 		// if no rows are returned, it means the table doesn't exist, so we return a 404
 		if err.Error() == "sql: no rows in result set" {

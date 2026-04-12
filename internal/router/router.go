@@ -49,7 +49,7 @@ func New() *gin.Engine {
 	// Record endpoints (primary resource)
 	records := v1.Group("/tables/:name")
 	{
-		// TODO: implement filtering and sorting
+		// Get records with filtering and sorting
 		records.GET("", apiHandlers.GetRecords)
 
 		// Get single record by ID

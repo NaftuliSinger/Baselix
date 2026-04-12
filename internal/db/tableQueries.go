@@ -40,7 +40,7 @@ func GetProjectTablesWithFields(ctx context.Context, projectID uuid.UUID) ([]mod
 	return tables, nil
 }
 
-func GetTableWithFields(ctx context.Context, projectID uuid.UUID, tableName string) (*models.Table, error) {
+func GetTableWithFieldsByName(ctx context.Context, projectID uuid.UUID, tableName string) (*models.Table, error) {
 	/*
 		We want to get a specific table for a project, along with its fields.
 		We are utilising Bun's hook to filter the table by project ID and table name
@@ -70,22 +70,22 @@ func GetTableWithFields(ctx context.Context, projectID uuid.UUID, tableName stri
 	return &table, nil
 }
 
-func GetTableByName(ctx context.Context, projectID uuid.UUID, tableName string) (*models.Table, error) {
-	var table models.Table
-	err := DB.NewSelect().
-		Model(&table).
-		Where("name = ? AND project_id = ?", tableName, projectID).
-		Limit(config.Cfg.MaxSelectLimit).
-		Scan(ctx)
-	if err != nil {
-		return nil, err
-	}
+// func GetTableByName(ctx context.Context, projectID uuid.UUID, tableName string) (*models.Table, error) {
+// 	var table models.Table
+// 	err := DB.NewSelect().
+// 		Model(&table).
+// 		Where("name = ? AND project_id = ?", tableName, projectID).
+// 		Limit(config.Cfg.MaxSelectLimit).
+// 		Scan(ctx)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	return &table, nil
-}
+// 	return &table, nil
+// }
 
 func ExistsOrCreateTable(ctx context.Context, projectID uuid.UUID, tableName string, fields []models.Field) (table *models.Table, created bool, err error) {
-	table, err = GetTableWithFields(ctx, projectID, tableName)
+	table, err = GetTableWithFieldsByName(ctx, projectID, tableName)
 	if err != nil {
 		table, err = CreateTableWithFields(ctx, projectID, tableName, fields)
 		if err != nil {

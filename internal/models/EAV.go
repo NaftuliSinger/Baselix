@@ -60,7 +60,7 @@ type Value struct {
 	TableID     uuid.UUID `bun:"table_id,type:uuid,notnull"`
 	RecordID    uuid.UUID `bun:",type:uuid,notnull,unique:idx_record_field"`                                                                                                                    // part of composite unique
 	FieldID     uuid.UUID `bun:",type:uuid,notnull,unique:idx_record_field,unique:idx_field_unique_str,unique:idx_field_unique_int,unique:idx_field_unique_float,unique:idx_field_unique_uuid"` // part of multiple unique indexes
-	ValueString string    `bun:"value,nullzero"`
+	ValueString string    `bun:"value_str,nullzero"`
 	ValueInt    int       `bun:"value_int,nullzero"`
 	ValueFloat  float64   `bun:"value_float,nullzero"`
 	ValueBool   bool      `bun:"value_bool,nullzero"`
