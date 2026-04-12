@@ -235,14 +235,23 @@ func UpdateRecordsByID(ctx context.Context, projectID uuid.UUID, tableName strin
 	return records, nil
 }
 
-func GetRecordsByTableID(ctx context.Context, projectID uuid.UUID, tableID uuid.UUID) ([]*models.Record, error) {
+func GetRecordsByTableID(ctx context.Context, projectID uuid.UUID, tableID uuid.UUID, fieldMap map[string]*models.Field, filters []types.Filter) ([]*models.Record, error) {
 	var records []*models.Record
 	q := DB.NewSelect().
 		Model(&records).
-		Where("table_id = ? AND project_id = ?", tableID, projectID).
+		Where(`"record"."table_id" = ? AND "record"."project_id" = ?`, tableID, projectID).
 		Relation("Values").
 		Relation("Values.Field").
 		Limit(config.Cfg.MaxSelectLimit)
+
+	for _, f := range filters {
+		cond, args, err := buildFilterCondition(f, fieldMap)
+		if err != nil {
+			return nil, err
+		}
+		q = q.Where(cond, args...)
+	}
+
 	err := q.Scan(ctx)
 	if err != nil {
 		return nil, err

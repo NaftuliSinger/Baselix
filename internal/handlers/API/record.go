@@ -229,9 +229,24 @@ func GetRecords(c *gin.Context) {
 		return
 	}
 
-	_ = filters // TODO: implement filtering in DB query
+	// Build field map for filter validation and DB query
+	fieldMap := make(map[string]*models.Field, len(table.Fields))
+	for _, f := range table.Fields {
+		fieldMap[f.Name] = f
+	}
 
-	records, err := db.GetRecordsByTableID(c, project.ID, table.ID)
+	// Validate that every non-meta filter field exists in the table schema
+	metaFields := map[string]bool{"id": true, "created_at": true, "updated_at": true}
+	for _, fl := range filters {
+		if !metaFields[fl.Field] {
+			if _, ok := fieldMap[fl.Field]; !ok {
+				utils.ApiError(c, http.StatusBadRequest, fmt.Sprintf("filter field %q does not exist in table schema", fl.Field))
+				return
+			}
+		}
+	}
+
+	records, err := db.GetRecordsByTableID(c, project.ID, table.ID, fieldMap, filters)
 	if err != nil {
 		utils.ApiError(c, http.StatusInternalServerError, "failed to fetch records, error: "+err.Error())
 		return
