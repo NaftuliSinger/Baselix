@@ -7,7 +7,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
@@ -144,8 +143,9 @@ func CreateTableWithFields(ctx context.Context, projectID uuid.UUID, tableName s
 
 // UpdateTableFields reconciles the fields of an existing table with the
 // provided fields slice. It inserts new fields, updates the type of fields
-// whose type has changed (only when no values exist yet), and deletes fields
-// that are no longer present. All changes are applied inside a single transaction.
+// whose type has changed (deleting any existing values for that field), and
+// deletes fields that are no longer present (along with their values). All
+// changes are applied inside a single transaction.
 func UpdateTableFields(ctx context.Context, tableName string, fields []models.Field) (table *models.Table, err error) {
 	tx, err := DB.BeginTx(ctx, nil)
 	if err != nil {
@@ -197,16 +197,11 @@ func UpdateTableFields(ctx context.Context, tableName string, fields []models.Fi
 			// Type unchanged — nothing to do.
 			continue
 		}
-		// Type changed — only allow if no values have been stored yet,
-		// otherwise we would silently lose data.
-		var count int
-		if count, err = tx.NewSelect().Model((*models.Value)(nil)).
+		// Type changed — delete existing values so the field can be safely retyped.
+		if _, err = tx.NewDelete().Model((*models.Value)(nil)).
 			Where("field_id = ?", existing.ID).
-			Count(ctx); err != nil {
+			Exec(ctx); err != nil {
 			return nil, err
-		}
-		if count > 0 {
-			return nil, fmt.Errorf("cannot change type of field %q: %d existing value(s) would be lost", field.Name, count)
 		}
 		if _, err = tx.NewUpdate().Model((*models.Field)(nil)).
 			Set("type = ?", field.Type).
@@ -216,9 +211,14 @@ func UpdateTableFields(ctx context.Context, tableName string, fields []models.Fi
 		}
 	}
 
-	// Delete fields that were omitted from the incoming payload.
+	// Delete fields that were omitted from the incoming payload, along with their values.
 	for _, f := range table.Fields {
 		if !incomingNames[f.Name] {
+			if _, err = tx.NewDelete().Model((*models.Value)(nil)).
+				Where("field_id = ?", f.ID).
+				Exec(ctx); err != nil {
+				return nil, err
+			}
 			if _, err = tx.NewDelete().Model((*models.Field)(nil)).
 				Where("id = ?", f.ID).
 				Exec(ctx); err != nil {

@@ -60,9 +60,7 @@ func toSQLOp(op string) (string, error) {
 		return "<", nil
 	case "lte", "le":
 		return "<=", nil
-	case "like":
-		return "LIKE", nil
-	case "ilike":
+	case "contains":
 		return "ILIKE", nil
 	default:
 		return "", fmt.Errorf("unknown filter operator %q", op)
@@ -70,10 +68,10 @@ func toSQLOp(op string) (string, error) {
 }
 
 // coerceFilterValue parses the string value from the filter into the correct Go type
-// for the given field type. For like/ilike operators the value is wrapped with %.
 func coerceFilterValue(val string, fieldType string, op string) (any, error) {
 	normOp := strings.ToLower(op)
-	if normOp == "like" || normOp == "ilike" {
+	// Wrap % around the contains value for ILIKE query
+	if normOp == "contains" {
 		if fieldType != "string" && fieldType != "json" {
 			return nil, fmt.Errorf("operator %q is only supported for string and json fields", op)
 		}
@@ -113,7 +111,8 @@ func coerceFilterValue(val string, fieldType string, op string) (any, error) {
 		}
 		return u, nil
 	default:
-		return val, nil
+		//
+		return nil, fmt.Errorf("unknown field type %q for filter value", fieldType)
 	}
 }
 

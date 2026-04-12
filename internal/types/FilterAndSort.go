@@ -33,6 +33,14 @@ func ParseFilters(filterStr string) ([]Filter, error) {
 			return nil, fmt.Errorf("invalid filter format: %q", p)
 		}
 
+		// Validate operator is one of the supported ones, if not return an error
+		op := strings.ToLower(f[1])
+		switch op {
+		case "eq", "ne", "gt", "gte", "lt", "lte", "contains":
+		default:
+			return nil, fmt.Errorf("invalid filter operator: %q", f[1])
+		}
+
 		filters = append(filters, Filter{
 			Field:    f[0],
 			Operator: f[1],
