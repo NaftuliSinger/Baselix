@@ -112,10 +112,10 @@ func CreateTable(c *gin.Context) {
 	schema := requestBody.Schema
 
 	// Convert the inferred schema to Field models, which includes validation
-	fields, err := utils.ConvertSchemaMapToFields(schema)
+	fields, err := utils.CleanAndConvertPayloadToFieldModels(schema)
 
 	if err != nil {
-		var reservedErr *types.ResrvedFieldError
+		var reservedErr *types.ReservedFieldError
 		if errors.As(err, &reservedErr) {
 			utils.ApiError(c, http.StatusBadRequest, err.Error())
 			return
@@ -164,10 +164,10 @@ func UpdateTable(c *gin.Context) {
 	schema := requestBody.Schema
 
 	// Convert the inferred schema to Field models, which includes validation
-	fields, err := utils.ConvertSchemaMapToFields(schema)
+	fields, err := utils.CleanAndConvertPayloadToFieldModels(schema)
 
 	if err != nil {
-		var reservedErr *types.ResrvedFieldError
+		var reservedErr *types.ReservedFieldError
 		if errors.As(err, &reservedErr) {
 			utils.ApiError(c, http.StatusBadRequest, err.Error())
 			return

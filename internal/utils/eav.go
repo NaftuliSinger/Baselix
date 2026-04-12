@@ -12,6 +12,73 @@ import (
 	"github.com/google/uuid"
 )
 
+// ParseRecordsBody decodes a JSON body that is either a single object or an
+// array of objects and always returns a non-empty slice.
+func ParseRecordsBody(body []byte) ([]map[string]any, error) {
+	if len(body) == 0 {
+		return nil, fmt.Errorf("empty request body")
+	}
+
+	var records []map[string]any
+	if err := json.Unmarshal(body, &records); err != nil {
+		var single map[string]any
+		if err := json.Unmarshal(body, &single); err != nil {
+			return nil, fmt.Errorf("invalid request body: must be a JSON object or array of objects")
+		}
+		records = []map[string]any{single}
+	}
+
+	if len(records) == 0 {
+		return nil, fmt.Errorf("no records provided")
+	}
+
+	return records, nil
+}
+
+func MapToUUIDMap(m map[string]any) (map[uuid.UUID]map[string]any, error) {
+	result := make(map[uuid.UUID]map[string]any, len(m))
+	for key, val := range m {
+		id, err := uuid.Parse(key)
+		if err != nil {
+			return nil, fmt.Errorf("invalid record id %q: %w", key, err)
+		}
+		fields, ok := val.(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("record %q: value must be an object", key)
+		}
+		result[id] = fields
+	}
+	return result, nil
+}
+
+// RecordsToUUIDMap converts a slice of record objects (each containing an "id" key)
+// into a map of recordID -> remaining fields, suitable for patch updates.
+func RecordsToUUIDMap(records []map[string]any) (map[uuid.UUID]map[string]any, error) {
+	result := make(map[uuid.UUID]map[string]any, len(records))
+	for i, rec := range records {
+		idVal, ok := rec["id"]
+		if !ok {
+			return nil, fmt.Errorf("record at index %d is missing required \"id\" field", i)
+		}
+		idStr, ok := idVal.(string)
+		if !ok {
+			return nil, fmt.Errorf("record at index %d: \"id\" must be a string UUID", i)
+		}
+		id, err := uuid.Parse(idStr)
+		if err != nil {
+			return nil, fmt.Errorf("record at index %d: invalid id %q: %w", i, idStr, err)
+		}
+		fields := make(map[string]any, len(rec)-1)
+		for k, v := range rec {
+			if k != "id" {
+				fields[k] = v
+			}
+		}
+		result[id] = fields
+	}
+	return result, nil
+}
+
 func LowercaseSchemaMapValues(m map[string]interface{}) (map[string]interface{}, error) {
 	lowercased := make(map[string]interface{}, len(m))
 	for key, value := range m {
@@ -34,11 +101,11 @@ func CheckForReservedFields(m map[string]interface{}) error {
 	switch {
 	case m["id"] != nil:
 		// return custom error
-		return &types.ResrvedFieldError{FieldName: "id"}
+		return &types.ReservedFieldError{FieldName: "id"}
 	case m["created_at"] != nil:
-		return &types.ResrvedFieldError{FieldName: "created_at"}
+		return &types.ReservedFieldError{FieldName: "created_at"}
 	case m["updated_at"] != nil:
-		return &types.ResrvedFieldError{FieldName: "updated_at"}
+		return &types.ReservedFieldError{FieldName: "updated_at"}
 	default:
 		return nil
 	}
@@ -65,7 +132,7 @@ func StripUniqueSuffix(fieldName string) string {
 	return strings.TrimSuffix(fieldName, "_u")
 }
 
-func ConvertSchemaMapToFields(m map[string]interface{}) ([]models.Field, error) {
+func CleanAndConvertPayloadToFieldModels(m map[string]interface{}) ([]models.Field, error) {
 	// lowercase the map
 	lowercased, err := LowercaseSchemaMapValues(m)
 	if err != nil {
@@ -79,6 +146,7 @@ func ConvertSchemaMapToFields(m map[string]interface{}) ([]models.Field, error) 
 		return nil, err
 	}
 
+	// convert to list of Field models
 	fields := make([]models.Field, 0, len(m))
 	for name, typ := range m {
 		// validate the type is one of the allowed types, if not return an error

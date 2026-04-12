@@ -6,11 +6,11 @@ import (
 	"baselix/internal/models"
 	"baselix/internal/types"
 	"baselix/internal/utils"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -25,25 +25,15 @@ func CreateSingleOrMultipleRecords(c *gin.Context) {
 
 	tableName := c.Param("name")
 
-	// Read body once; try array first, then single object
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		utils.ApiError(c, http.StatusBadRequest, "failed to read request body")
 		return
 	}
 
-	var records []map[string]any
-	if err := json.Unmarshal(body, &records); err != nil {
-		var single map[string]any
-		if err := json.Unmarshal(body, &single); err != nil {
-			utils.ApiError(c, http.StatusBadRequest, "invalid request body")
-			return
-		}
-		records = []map[string]any{single}
-	}
-
-	if len(records) == 0 {
-		utils.ApiError(c, http.StatusBadRequest, "no records provided")
+	records, err := utils.ParseRecordsBody(body)
+	if err != nil {
+		utils.ApiError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -51,10 +41,10 @@ func CreateSingleOrMultipleRecords(c *gin.Context) {
 	schema := utils.InferSchemaFromRecords(records)
 
 	// Convert the inferred schema to Field models, which includes validation
-	fields, err := utils.ConvertSchemaMapToFields(schema)
+	fields, err := utils.CleanAndConvertPayloadToFieldModels(schema)
 
 	if err != nil {
-		var reservedErr *types.ResrvedFieldError
+		var reservedErr *types.ReservedFieldError
 		if errors.As(err, &reservedErr) {
 			utils.ApiError(c, http.StatusBadRequest, err.Error())
 			return
@@ -136,6 +126,76 @@ func CreateSingleOrMultipleRecords(c *gin.Context) {
 	})
 }
 
+func UpdateSingleOrMultipleRecords(c *gin.Context) {
+	project := middleware.GetAPIProject(c)
+	if project == nil {
+		utils.ApiError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	tableName := c.Param("name")
+
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		utils.ApiError(c, http.StatusBadRequest, "failed to read request body")
+		return
+	}
+
+	records, err := utils.ParseRecordsBody(body)
+	if err != nil {
+		utils.ApiError(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// return an error if created_at or updated_at fields are included in the payload
+	for _, rec := range records {
+		if _, exists := rec["created_at"]; exists {
+			var reservedErr *types.ReservedFieldError
+			reservedErr = &types.ReservedFieldError{FieldName: "created_at"}
+			utils.ApiError(c, http.StatusBadRequest, reservedErr.Error())
+			return
+		}
+		if _, exists := rec["updated_at"]; exists {
+			var reservedErr *types.ReservedFieldError
+			reservedErr = &types.ReservedFieldError{FieldName: "updated_at"}
+			utils.ApiError(c, http.StatusBadRequest, reservedErr.Error())
+			return
+		}
+	}
+
+	// convert the body to a map of recordID -> field updates
+	updates, err := utils.RecordsToUUIDMap(records)
+	if err != nil {
+		utils.ApiError(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	updated, err := db.UpdateRecordsByID(c, project.ID, tableName, updates)
+	if err != nil {
+		var recordNotFoundErr *types.RecordNotFoundError
+		if errors.As(err, &recordNotFoundErr) {
+			utils.ApiError(c, http.StatusNotFound, recordNotFoundErr.Error())
+			return
+		}
+		var uniqueErr *types.UniqueDuplicateValueError
+		if errors.As(err, &uniqueErr) {
+			utils.ApiError(c, http.StatusBadRequest, uniqueErr.Error())
+			return
+		}
+		utils.ApiError(c, http.StatusInternalServerError, "failed to update records, error: "+err.Error())
+		return
+	}
+
+	result := make([]types.RecordResponse, len(updated))
+	for i, rec := range updated {
+		result[i] = utils.MapRecordModelToRecordResponse(rec)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"records": result,
+	})
+}
+
 func GetRecords(c *gin.Context) {
 	project := middleware.GetAPIProject(c)
 	if project == nil {
@@ -192,5 +252,38 @@ func GetRecordByID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"records": result,
+	})
+}
+
+func DeleteRecordByID(c *gin.Context) {
+	project := middleware.GetAPIProject(c)
+	if project == nil {
+		utils.ApiError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	tableName := strings.ToLower(c.Param("name"))
+
+	recordIDStr := c.Param("id")
+	recordID, err := uuid.Parse(recordIDStr)
+	if err != nil {
+		utils.ApiError(c, http.StatusBadRequest, "invalid record ID")
+		return
+	}
+
+	err = db.DeleteRecordByID(c, project.ID, tableName, recordID)
+	if err != nil {
+		var recordNotFoundErr *types.RecordNotFoundError
+		if errors.As(err, &recordNotFoundErr) {
+			utils.ApiError(c, http.StatusNotFound, recordNotFoundErr.Error())
+			return
+		}
+
+		utils.ApiError(c, http.StatusInternalServerError, "failed to delete record, error: "+err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "record deleted",
 	})
 }

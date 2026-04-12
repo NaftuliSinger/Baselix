@@ -57,8 +57,15 @@ func New() *gin.Engine {
 
 		// Create single or multiple records (upsert-like behavior), inferring schema and creating table if needed
 		records.POST("", apiHandlers.CreateSingleOrMultipleRecords)
-		// records.PUT("/:id", apiHandlers.UpdateRecordByID)
-		// records.DELETE("/:id", apiHandlers.DeleteRecordByID)
+
+		// record put with id for one record
+		//records.PUT("/:id", apiHandlers.UpdateSingleRecordByID)
+
+		// Patch single or multiple records by ID, including partial updates
+		records.PATCH("", apiHandlers.UpdateSingleOrMultipleRecords)
+
+		// Delete single record by ID
+		records.DELETE("/:id", apiHandlers.DeleteRecordByID)
 	}
 
 	// Schema endpoints (table definition)

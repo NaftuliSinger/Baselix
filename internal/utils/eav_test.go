@@ -11,6 +11,192 @@ import (
 	"github.com/google/uuid"
 )
 
+// Test ParseRecordsBody
+
+// Success case: single JSON object should be returned as a one-element slice
+func TestParseRecordsBody_SingleObject(t *testing.T) {
+	body := []byte(`{"name":"Alice","age":30}`)
+	result, err := ParseRecordsBody(body)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if len(result) != 1 {
+		t.Fatalf("Expected 1 record, got %d", len(result))
+	}
+	if result[0]["name"] != "Alice" {
+		t.Errorf("Expected name=Alice, got %v", result[0]["name"])
+	}
+}
+
+// Success case: JSON array should be returned as-is
+func TestParseRecordsBody_ArrayOfObjects(t *testing.T) {
+	body := []byte(`[{"name":"Alice"},{"name":"Bob"}]`)
+	result, err := ParseRecordsBody(body)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if len(result) != 2 {
+		t.Fatalf("Expected 2 records, got %d", len(result))
+	}
+}
+
+// Failure case: empty body should return an error
+func TestParseRecordsBody_EmptyBody(t *testing.T) {
+	_, err := ParseRecordsBody([]byte{})
+	if err == nil {
+		t.Error("Expected error for empty body, got nil")
+	}
+}
+
+// Failure case: empty JSON array should return an error
+func TestParseRecordsBody_EmptyArray(t *testing.T) {
+	_, err := ParseRecordsBody([]byte(`[]`))
+	if err == nil {
+		t.Error("Expected error for empty array, got nil")
+	}
+}
+
+// Failure case: invalid JSON should return an error
+func TestParseRecordsBody_InvalidJSON(t *testing.T) {
+	_, err := ParseRecordsBody([]byte(`not json`))
+	if err == nil {
+		t.Error("Expected error for invalid JSON, got nil")
+	}
+}
+
+// Test MapToUUIDMap
+
+func TestMapToUUIDMap_Success(t *testing.T) {
+	id1 := uuid.New()
+	id2 := uuid.New()
+	input := map[string]any{
+		id1.String(): map[string]any{"name": "Alice"},
+		id2.String(): map[string]any{"age": 30},
+	}
+	result, err := MapToUUIDMap(input)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if len(result) != 2 {
+		t.Fatalf("Expected 2 entries, got %d", len(result))
+	}
+	if result[id1]["name"] != "Alice" {
+		t.Errorf("Expected name=Alice for id1, got %v", result[id1]["name"])
+	}
+	if result[id2]["age"] != 30 {
+		t.Errorf("Expected age=30 for id2, got %v", result[id2]["age"])
+	}
+}
+
+func TestMapToUUIDMap_EmptyFields(t *testing.T) {
+	id1 := uuid.New()
+	input := map[string]any{
+		id1.String(): map[string]any{},
+	}
+	result, err := MapToUUIDMap(input)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if len(result[id1]) != 0 {
+		t.Errorf("Expected empty fields map, got %v", result[id1])
+	}
+}
+
+func TestMapToUUIDMap_InvalidID(t *testing.T) {
+	input := map[string]any{
+		"not-a-uuid": map[string]any{"name": "Alice"},
+	}
+	_, err := MapToUUIDMap(input)
+	if err == nil {
+		t.Error("Expected error for invalid UUID key, got nil")
+	}
+}
+
+func TestMapToUUIDMap_ValueNotObject(t *testing.T) {
+	id1 := uuid.New()
+	input := map[string]any{
+		id1.String(): "not-an-object",
+	}
+	_, err := MapToUUIDMap(input)
+	if err == nil {
+		t.Error("Expected error when value is not an object, got nil")
+	}
+}
+
+// Test RecordsToUUIDMap
+// Success case: valid records with "id" field should be converted to map
+
+func TestRecordsToUUIDMap_Success(t *testing.T) {
+	id1 := uuid.New()
+	id2 := uuid.New()
+	input := []map[string]any{
+		{"id": id1.String(), "name": "Alice"},
+		{"id": id2.String(), "age": 30},
+	}
+	result, err := RecordsToUUIDMap(input)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if len(result) != 2 {
+		t.Fatalf("Expected 2 entries, got %d", len(result))
+	}
+	if result[id1]["name"] != "Alice" {
+		t.Errorf("Expected name=Alice for id1, got %v", result[id1]["name"])
+	}
+	if _, hasID := result[id1]["id"]; hasID {
+		t.Error("Expected 'id' key to be stripped from fields")
+	}
+}
+
+// Success case: record with only "id" field should produce an entry with empty fields map
+func TestRecordsToUUIDMap_EmptyFields(t *testing.T) {
+	id1 := uuid.New()
+	input := []map[string]any{
+		{"id": id1.String()},
+	}
+	result, err := RecordsToUUIDMap(input)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if len(result[id1]) != 0 {
+		t.Errorf("Expected empty fields map, got %v", result[id1])
+	}
+}
+
+// Failure case: record missing "id" field should return an error
+
+func TestRecordsToUUIDMap_MissingID(t *testing.T) {
+	input := []map[string]any{
+		{"name": "Alice"},
+	}
+	_, err := RecordsToUUIDMap(input)
+	if err == nil {
+		t.Error("Expected error for missing id field, got nil")
+	}
+}
+
+// Failure case: record with non-string "id" field should return an error
+func TestRecordsToUUIDMap_InvalidID(t *testing.T) {
+	input := []map[string]any{
+		{"id": "not-a-uuid", "name": "Alice"},
+	}
+	_, err := RecordsToUUIDMap(input)
+	if err == nil {
+		t.Error("Expected error for invalid UUID id, got nil")
+	}
+}
+
+// Failure case: record with "id" field that is not a string should return an error
+func TestRecordsToUUIDMap_NonStringID(t *testing.T) {
+	input := []map[string]any{
+		{"id": 12345, "name": "Alice"},
+	}
+	_, err := RecordsToUUIDMap(input)
+	if err == nil {
+		t.Error("Expected error when id is not a string, got nil")
+	}
+}
+
 // Test LowercaseSchemaMapValues
 // Success case: map with mixed case keys should be converted to lowercase
 func TestLowercaseSchemaMapValues_MixedCase(t *testing.T) {
@@ -62,9 +248,9 @@ func TestCheckForReservedFields_Success(t *testing.T) {
 
 	// expected list of errors for each case
 	expected := []error{
-		&types.ResrvedFieldError{FieldName: "id"},
-		&types.ResrvedFieldError{FieldName: "created_at"},
-		&types.ResrvedFieldError{FieldName: "updated_at"},
+		&types.ReservedFieldError{FieldName: "id"},
+		&types.ReservedFieldError{FieldName: "created_at"},
+		&types.ReservedFieldError{FieldName: "updated_at"},
 	}
 
 	for i, input := range inputs {
@@ -146,9 +332,9 @@ func TestIsValidFieldType_Invalid(t *testing.T) {
 	}
 }
 
-// Test ConvertSchemaMapToFields
+// Test CleanAndConvertPayloadToFieldModels
 // Success case: valid schema map should be converted to fields
-func TestConvertSchemaMapToFields_WithValidSchema(t *testing.T) {
+func TestCleanAndConvertPayloadToFieldModels_WithValidSchema(t *testing.T) {
 	input := map[string]interface{}{
 		"name":   "string",
 		"age":    "Int",      // Int is capitalized to test lowercasing
@@ -171,7 +357,7 @@ func TestConvertSchemaMapToFields_WithValidSchema(t *testing.T) {
 			Unique: true,
 		},
 	}
-	result, err := ConvertSchemaMapToFields(input)
+	result, err := CleanAndConvertPayloadToFieldModels(input)
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
@@ -188,27 +374,27 @@ func TestConvertSchemaMapToFields_WithValidSchema(t *testing.T) {
 }
 
 // Failure case: using reserved field names should return an error
-func TestConvertSchemaMapToFields_ReservedFieldNames(t *testing.T) {
+func TestCleanAndConvertPayloadToFieldModels_ReservedFieldNames(t *testing.T) {
 	input := map[string]interface{}{
 		"id":         "string",
 		"created_at": "time",
 		"updated_at": "time",
 	}
 	// expect an error due to reserved field names
-	_, err := ConvertSchemaMapToFields(input)
+	_, err := CleanAndConvertPayloadToFieldModels(input)
 	if err == nil {
 		t.Errorf("Expected error due to reserved field names, got nil")
 	}
 }
 
 // Failure case: invalid type in schema map should be skipped
-func TestConvertSchemaMapToFields_InvalidType(t *testing.T) {
+func TestCleanAndConvertPayloadToFieldModels_InvalidType(t *testing.T) {
 	input := map[string]interface{}{
 		"name": "bool_u", // invalid type with extra "u"
 		"age":  "int",
 	}
 	// expect an error due to invalid type
-	_, err := ConvertSchemaMapToFields(input)
+	_, err := CleanAndConvertPayloadToFieldModels(input)
 	if err == nil {
 		t.Errorf("Expected error due to invalid field type, got nil")
 	}
