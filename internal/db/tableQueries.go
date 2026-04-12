@@ -5,6 +5,7 @@ import (
 	"baselix/internal/models"
 	"baselix/internal/types"
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 
@@ -60,6 +61,9 @@ func GetTableWithFields(ctx context.Context, projectID uuid.UUID, tableName stri
 		Limit(config.Cfg.MaxSelectLimit).
 		Scan(ctx)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, &types.TableNotFoundError{TableName: tableName}
+		}
 		return nil, err
 	}
 

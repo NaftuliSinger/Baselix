@@ -168,6 +168,12 @@ func UpdateSingleOrMultipleRecords(c *gin.Context) {
 
 	updated, err := db.UpdateRecordsByID(c, project.ID, tableName, updates)
 	if err != nil {
+		var tableNotFoundErr *types.TableNotFoundError
+		if errors.As(err, &tableNotFoundErr) {
+			utils.ApiError(c, http.StatusNotFound, tableNotFoundErr.Error())
+			return
+		}
+
 		var recordNotFoundErr *types.RecordNotFoundError
 		if errors.As(err, &recordNotFoundErr) {
 			utils.ApiError(c, http.StatusNotFound, recordNotFoundErr.Error())
