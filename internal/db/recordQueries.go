@@ -5,7 +5,6 @@ import (
 	"baselix/internal/models"
 	"baselix/internal/types"
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"regexp"
@@ -101,16 +100,65 @@ func UpdateRecordsByID(ctx context.Context, projectID uuid.UUID, tableName strin
 		return nil, nil
 	}
 
-	// Fetch the table with its fields for validation
 	table, err := GetTableWithFields(ctx, projectID, tableName)
 	if err != nil {
 		return nil, err
 	}
 
-	// Build a fieldName -> Field map for O(1) lookups
 	fieldMap := make(map[string]*models.Field, len(table.Fields))
 	for _, f := range table.Fields {
 		fieldMap[f.Name] = f
+	}
+
+	// Validate all field names and build all values before touching the DB
+	var allValues []*models.Value
+	var updatedRecordIDs []uuid.UUID
+	for recordID, fieldValues := range updates {
+		for fieldName, val := range fieldValues {
+			field, ok := fieldMap[fieldName]
+			if !ok {
+				return nil, fmt.Errorf("field '%s' does not exist in table '%s'", fieldName, tableName)
+			}
+			v, err := NewValue(table.ID, recordID, field.ID, field.Type, field.Unique, val)
+			if err != nil {
+				return nil, err
+			}
+			allValues = append(allValues, v)
+		}
+		if len(fieldValues) > 0 {
+			updatedRecordIDs = append(updatedRecordIDs, recordID)
+		}
+	}
+
+	// Collect all record IDs for a single batch existence check
+	allRecordIDs := make([]uuid.UUID, 0, len(updates))
+	for recordID := range updates {
+		allRecordIDs = append(allRecordIDs, recordID)
+	}
+
+	var existingRecords []struct {
+		ID uuid.UUID `bun:"id"`
+	}
+	err = DB.NewSelect().
+		TableExpr("records").
+		Column("id").
+		Where("id IN (?) AND project_id = ? AND table_id = ?", bun.In(allRecordIDs), projectID, table.ID).
+		Scan(ctx, &existingRecords)
+	if err != nil {
+		return nil, err
+	}
+	existingSet := make(map[uuid.UUID]struct{}, len(existingRecords))
+	for _, r := range existingRecords {
+		existingSet[r.ID] = struct{}{}
+	}
+	for _, id := range allRecordIDs {
+		if _, ok := existingSet[id]; !ok {
+			return nil, &types.RecordNotFoundError{TableName: tableName, RecordID: id.String()}
+		}
+	}
+
+	if len(updatedRecordIDs) == 0 {
+		return nil, nil
 	}
 
 	now := time.Now()
@@ -121,87 +169,58 @@ func UpdateRecordsByID(ctx context.Context, projectID uuid.UUID, tableName strin
 	}
 	defer tx.Rollback()
 
-	var updatedRecordIDs []uuid.UUID
-
-	for recordID, fieldValues := range updates {
-		// Verify the record exists in this project and table
-		var rec models.Record
-		err = tx.NewSelect().
-			Model(&rec).
-			Column("id").
-			Where("id = ? AND project_id = ? AND table_id = ?", recordID, projectID, table.ID).
-			Scan(ctx)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				return nil, &types.RecordNotFoundError{TableName: tableName, RecordID: recordID.String()}
-			}
-			return nil, err
-		}
-
-		// Validate fields and upsert values
-		for fieldName, val := range fieldValues {
-			field, ok := fieldMap[fieldName]
-			if !ok {
-				return nil, fmt.Errorf("field '%s' does not exist in table '%s'", fieldName, tableName)
-			}
-
-			v, err := NewValue(table.ID, recordID, field.ID, field.Type, field.Unique, val)
-			if err != nil {
-				return nil, err
-			}
-
-			_, err = tx.NewInsert().
-				Model(v).
-				On("CONFLICT (record_id, field_id) DO UPDATE").
-				Set("value = EXCLUDED.value").
-				Set("value_int = EXCLUDED.value_int").
-				Set("value_float = EXCLUDED.value_float").
-				Set("value_bool = EXCLUDED.value_bool").
-				Set("value_time = EXCLUDED.value_time").
-				Set("value_json = EXCLUDED.value_json").
-				Set("value_uuid = EXCLUDED.value_uuid").
-				Set("unique_value_str = EXCLUDED.unique_value_str").
-				Set("unique_value_int = EXCLUDED.unique_value_int").
-				Set("unique_value_float = EXCLUDED.unique_value_float").
-				Set("unique_value_uuid = EXCLUDED.unique_value_uuid").
-				Exec(ctx)
-			if err != nil {
-				var pgErr pgdriver.Error
-				if errors.As(err, &pgErr) && pgErr.Field('C') == "23505" {
-					rawValues := parseUniqueViolationDetail(pgErr.Field('D'))
-					parts := strings.SplitN(rawValues, ", ", 2)
-					var dupValue string
-					if len(parts) == 2 {
-						dupValue = strings.TrimSpace(parts[1])
+	// Single batch upsert for all values across all records
+	_, err = tx.NewInsert().
+		Model(&allValues).
+		On("CONFLICT (record_id, field_id) DO UPDATE").
+		Set("value = EXCLUDED.value").
+		Set("value_int = EXCLUDED.value_int").
+		Set("value_float = EXCLUDED.value_float").
+		Set("value_bool = EXCLUDED.value_bool").
+		Set("value_time = EXCLUDED.value_time").
+		Set("value_json = EXCLUDED.value_json").
+		Set("value_uuid = EXCLUDED.value_uuid").
+		Set("unique_value_str = EXCLUDED.unique_value_str").
+		Set("unique_value_int = EXCLUDED.unique_value_int").
+		Set("unique_value_float = EXCLUDED.unique_value_float").
+		Set("unique_value_uuid = EXCLUDED.unique_value_uuid").
+		Exec(ctx)
+	if err != nil {
+		var pgErr pgdriver.Error
+		if errors.As(err, &pgErr) && pgErr.Field('C') == "23505" {
+			rawValues := parseUniqueViolationDetail(pgErr.Field('D'))
+			parts := strings.SplitN(rawValues, ", ", 2)
+			var fieldName, dupValue string
+			if len(parts) == 2 {
+				dupValue = strings.TrimSpace(parts[1])
+				if fieldID, parseErr := uuid.Parse(strings.TrimSpace(parts[0])); parseErr == nil {
+					for name, f := range fieldMap {
+						if f.ID == fieldID {
+							fieldName = name
+							break
+						}
 					}
-					return nil, &types.UniqueDuplicateValueError{FieldName: fieldName, Value: dupValue}
 				}
-				return nil, err
 			}
+			return nil, &types.UniqueDuplicateValueError{FieldName: fieldName, Value: dupValue}
 		}
+		return nil, err
+	}
 
-		if len(fieldValues) > 0 {
-			_, err = tx.NewUpdate().
-				Model((*models.Record)(nil)).
-				Set("updated_at = ?", now).
-				Where("id = ? AND project_id = ?", recordID, projectID).
-				Exec(ctx)
-			if err != nil {
-				return nil, err
-			}
-			updatedRecordIDs = append(updatedRecordIDs, recordID)
-		}
+	// Single batch update of updated_at for all affected records
+	_, err = tx.NewUpdate().
+		Model((*models.Record)(nil)).
+		Set("updated_at = ?", now).
+		Where("id IN (?) AND project_id = ?", bun.In(updatedRecordIDs), projectID).
+		Exec(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
 
-	if len(updatedRecordIDs) == 0 {
-		return nil, nil
-	}
-
-	// Fetch and return the updated records with their values
 	var records []*models.Record
 	err = DB.NewSelect().
 		Model(&records).
