@@ -132,7 +132,21 @@ func StripUniqueSuffix(fieldName string) string {
 	return strings.TrimSuffix(fieldName, "_u")
 }
 
+func HasListValue(m map[string]interface{}) bool {
+	for _, value := range m {
+		if _, ok := value.([]any); ok {
+			return true
+		}
+	}
+	return false
+}
+
 func CleanAndConvertPayloadToFieldModels(m map[string]interface{}) ([]models.Field, error) {
+	// return error if map includes [] fields, as they are not supported
+	if HasListValue(m) {
+		return nil, fmt.Errorf("list values are not supported in the payload")
+	}
+
 	// lowercase the map
 	lowercased, err := LowercaseSchemaMapValues(m)
 	if err != nil {
@@ -173,62 +187,67 @@ func CleanAndConvertPayloadToFieldModels(m map[string]interface{}) ([]models.Fie
 	return fields, nil
 }
 
-func InferTypeFromValue(value any) string {
+func InferTypeFromValue(value any) (string, error) {
 	switch v := value.(type) {
 	case string:
 		// Try UUID first
 		if _, err := uuid.Parse(v); err == nil {
-			return "uuid"
+			return "uuid", nil
 		}
 
 		// Try time in RFC3339 (ISO 8601) format with timezone
 		if _, err := time.Parse(time.RFC3339, v); err == nil {
-			return "time"
+			return "time", nil
 		}
 
 		// Otherwise treat as string
-		return "string"
+		return "string", nil
 
 	case int, int8, int16, int32, int64, float32, float64:
-		return "float"
+		return "float", nil
 
 	case bool:
-		return "bool"
+		return "bool", nil
 
 	case time.Time:
-		return "time"
+		return "time", nil
 
 	case map[string]any:
-		return "json"
+		return "json", nil
 
 	case uuid.UUID:
-		return "uuid"
+		return "uuid", nil
+
+	case []any:
+		return "", fmt.Errorf("list values are not supported")
 
 	default:
-		return "unknown"
+		return "", fmt.Errorf("unable to infer type for value of type %T", value)
 	}
 }
 
 // InferSchemaFromRecords infers a unified schema from multiple records by merging all fields.
-func InferSchemaFromRecords(records []map[string]any) map[string]interface{} {
+func InferSchemaFromRecords(records []map[string]any) (map[string]interface{}, error) {
 	schema := make(map[string]interface{})
+
 	for _, data := range records {
 		for key, value := range data {
 			if _, exists := schema[key]; !exists {
-				valueType := InferTypeFromValue(value)
-				if valueType == "unknown" {
-					continue // skip fields with unknown types
+				valueType, err := InferTypeFromValue(value)
+				if err != nil {
+					return nil, err
 				}
 				schema[key] = valueType
 			}
 		}
 	}
-	return schema
+	return schema, nil
 }
 
 func MapRecordModelToRecordResponse(record *models.Record) types.RecordResponse {
 	values := make([]types.RecordField, 0, len(record.Values))
 
+	coveredFields := make(map[string]struct{}, len(record.Values))
 	for _, v := range record.Values {
 		raw := db.GetValue(v, v.Field.Type, v.Field.Unique)
 
@@ -243,6 +262,16 @@ func MapRecordModelToRecordResponse(record *models.Record) types.RecordResponse 
 		}
 
 		values = append(values, types.RecordField{Key: v.Field.Name, Value: raw})
+		coveredFields[v.Field.Name] = struct{}{}
+	}
+
+	// Fill in null for any table field that has no value on this record
+	if record.Table != nil {
+		for _, f := range record.Table.Fields {
+			if _, exists := coveredFields[f.Name]; !exists {
+				values = append(values, types.RecordField{Key: f.Name, Value: nil})
+			}
+		}
 	}
 
 	return types.RecordResponse{

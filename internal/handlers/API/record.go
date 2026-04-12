@@ -38,7 +38,11 @@ func CreateSingleOrMultipleRecords(c *gin.Context) {
 	}
 
 	// Infer schema from all records combined, then create/get the table
-	schema := utils.InferSchemaFromRecords(records)
+	schema, err := utils.InferSchemaFromRecords(records)
+	if err != nil {
+		utils.ApiError(c, http.StatusInternalServerError, "failed to infer schema from records, error: "+err.Error())
+		return
+	}
 
 	// Convert the inferred schema to Field models, which includes validation
 	fields, err := utils.CleanAndConvertPayloadToFieldModels(schema)
@@ -102,7 +106,23 @@ func CreateSingleOrMultipleRecords(c *gin.Context) {
 	if err != nil {
 		var uniqueErr *types.UniqueDuplicateValueError
 		if errors.As(err, &uniqueErr) {
+			if newTableCreated {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"message": "Table '" + table.Name + "' created with inferred schema.",
+					"error":   http.StatusBadRequest,
+					"details": uniqueErr.Error(),
+				})
+				return
+			}
 			utils.ApiError(c, http.StatusBadRequest, uniqueErr.Error())
+			return
+		}
+		if newTableCreated {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Table '" + table.Name + "' created with inferred schema.",
+				"error":   http.StatusInternalServerError,
+				"details": "failed to insert records, error: " + err.Error(),
+			})
 			return
 		}
 		utils.ApiError(c, http.StatusInternalServerError, "failed to insert records, error: "+err.Error())
@@ -111,6 +131,7 @@ func CreateSingleOrMultipleRecords(c *gin.Context) {
 
 	result := make([]types.RecordResponse, len(inserted))
 	for i, rec := range inserted {
+		rec.Table = table
 		result[i] = utils.MapRecordModelToRecordResponse(rec)
 	}
 

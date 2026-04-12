@@ -227,6 +227,8 @@ func UpdateRecordsByID(ctx context.Context, projectID uuid.UUID, tableName strin
 		Where("id IN (?) AND project_id = ?", bun.In(updatedRecordIDs), projectID).
 		Relation("Values").
 		Relation("Values.Field").
+		Relation("Table").
+		Relation("Table.Fields").
 		Scan(ctx)
 	if err != nil {
 		return nil, err
@@ -242,6 +244,8 @@ func GetRecordsByTableID(ctx context.Context, projectID uuid.UUID, tableID uuid.
 		Where(`"record"."table_id" = ? AND "record"."project_id" = ?`, tableID, projectID).
 		Relation("Values").
 		Relation("Values.Field").
+		Relation("Table").
+		Relation("Table.Fields").
 		Limit(config.Cfg.MaxSelectLimit)
 
 	for _, f := range filters {
@@ -266,6 +270,8 @@ func GetRecordByID(ctx context.Context, projectID uuid.UUID, recordID uuid.UUID)
 		Where("id = ? AND project_id = ?", recordID, projectID).
 		Relation("Values").
 		Relation("Values.Field").
+		Relation("Table").
+		Relation("Table.Fields").
 		Scan(ctx)
 	if err != nil {
 		return nil, err

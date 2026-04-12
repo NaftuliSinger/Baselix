@@ -332,6 +332,29 @@ func TestIsValidFieldType_Invalid(t *testing.T) {
 	}
 }
 
+// Test HasListValue
+// Success case: map with a list value should return true
+func TestHasListValue_WithList(t *testing.T) {
+	m := map[string]interface{}{
+		"name": "Alice",
+		"tags": []any{"tag1", "tag2"},
+	}
+	if !HasListValue(m) {
+		t.Error("Expected HasListValue to return true when a list value is present")
+	}
+}
+
+// Failure case: map without any list values should return false
+func TestHasListValue_NoList(t *testing.T) {
+	m := map[string]interface{}{
+		"name": "Bob",
+		"age":  30,
+	}
+	if HasListValue(m) {
+		t.Error("Expected HasListValue to return false when no list values are present")
+	}
+}
+
 // Test CleanAndConvertPayloadToFieldModels
 // Success case: valid schema map should be converted to fields
 func TestCleanAndConvertPayloadToFieldModels_WithValidSchema(t *testing.T) {
@@ -413,7 +436,10 @@ func TestInferTypeFromValue_Success(t *testing.T) {
 		{true, "bool"},
 	}
 	for _, test := range tests {
-		result := InferTypeFromValue(test.value)
+		result, err := InferTypeFromValue(test.value)
+		if err != nil {
+			t.Errorf("Unexpected error: %v", err)
+		}
 		if result != test.expected {
 			t.Errorf("Expected %s, got %s for value %v", test.expected, result, test.value)
 		}
@@ -423,9 +449,12 @@ func TestInferTypeFromValue_Success(t *testing.T) {
 // Failure case: unknown type should return "unknown"
 func TestInferTypeFromValue_UnknownType(t *testing.T) {
 	var unknownType struct{}
-	result := InferTypeFromValue(unknownType)
-	if result != "unknown" {
-		t.Errorf("Expected %s, got %s for value %v", "unknown", result, unknownType)
+	result, err := InferTypeFromValue(unknownType)
+	if err == nil {
+		t.Errorf("Expected error for unknown type, got nil")
+	}
+	if result != "" {
+		t.Errorf("Expected empty string for unknown type, got %s", result)
 	}
 }
 
@@ -444,7 +473,10 @@ func TestInferSchemaFromRecords_Success(t *testing.T) {
 		"user_id":    "uuid",
 		"meta":       "json",
 	}
-	result := InferSchemaFromRecords(records)
+	result, err := InferSchemaFromRecords(records)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
 	if !reflect.DeepEqual(result, expected) {
 		t.Errorf("Expected %v, got %v", expected, result)
 	}
@@ -456,13 +488,9 @@ func TestInferSchemaFromRecords_UnknownType(t *testing.T) {
 		{"name": "Alice", "age": 30},
 		{"name": "Bob", "age": 25, "data": struct{}{}}, // unknown type
 	}
-	expected := map[string]interface{}{
-		"name": "string",
-		"age":  "float",
-	}
-	result := InferSchemaFromRecords(records)
-	if !reflect.DeepEqual(result, expected) {
-		t.Errorf("Expected %v, got %v", expected, result)
+	_, err := InferSchemaFromRecords(records)
+	if err == nil {
+		t.Errorf("Expected error for unknown type, got nil")
 	}
 }
 
