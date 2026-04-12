@@ -147,36 +147,14 @@ func UpdateSingleOrMultipleRecords(c *gin.Context) {
 		return
 	}
 
-	// ensure every record has an "id" field that is a valid UUID
-	for i, rec := range records {
-		idVal, exists := rec["id"]
-		if !exists {
-			utils.ApiError(c, http.StatusBadRequest, fmt.Sprintf("record at index %d is missing 'id' field", i))
-			return
-		}
-		idStr, ok := idVal.(string)
-		if !ok {
-			utils.ApiError(c, http.StatusBadRequest, fmt.Sprintf("record at index %d has 'id' field that is not a string", i))
-			return
-		}
-		if _, err := uuid.Parse(idStr); err != nil {
-			utils.ApiError(c, http.StatusBadRequest, fmt.Sprintf("record at index %d has invalid UUID in 'id' field: %v", i, err))
-			return
-		}
-	}
-
 	// return an error if created_at or updated_at fields are included in the payload
 	for _, rec := range records {
 		if _, exists := rec["created_at"]; exists {
-			var reservedErr *types.ReservedFieldError
-			reservedErr = &types.ReservedFieldError{FieldName: "created_at"}
-			utils.ApiError(c, http.StatusBadRequest, reservedErr.Error())
+			utils.ApiError(c, http.StatusBadRequest, (&types.ReservedFieldError{FieldName: "created_at"}).Error())
 			return
 		}
 		if _, exists := rec["updated_at"]; exists {
-			var reservedErr *types.ReservedFieldError
-			reservedErr = &types.ReservedFieldError{FieldName: "updated_at"}
-			utils.ApiError(c, http.StatusBadRequest, reservedErr.Error())
+			utils.ApiError(c, http.StatusBadRequest, (&types.ReservedFieldError{FieldName: "updated_at"}).Error())
 			return
 		}
 	}
