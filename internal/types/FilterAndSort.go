@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 )
 
 type Filter struct {
@@ -70,10 +71,32 @@ func ParseSorts(sortStr string) ([]Sort, error) {
 	return sorts, nil
 }
 
+var metaFields = map[string]bool{"id": true, "created_at": true, "updated_at": true}
+
+func recordFieldValue(r RecordResponse, field string) any {
+	switch field {
+	case "id":
+		return r.ID
+	case "created_at":
+		return r.CreatedAt
+	case "updated_at":
+		return r.UpdatedAt
+	}
+	for _, f := range r.Values {
+		if f.Key == field {
+			return f.Value
+		}
+	}
+	return nil
+}
+
 func ApplySorts(records []RecordResponse, sorts []Sort) ([]RecordResponse, error) {
 	// Validate that every sort field exists in at least one record.
 	if len(records) > 0 {
 		for _, s := range sorts {
+			if metaFields[s.Field] {
+				continue
+			}
 			found := false
 			for _, r := range records {
 				for _, f := range r.Values {
@@ -96,19 +119,8 @@ func ApplySorts(records []RecordResponse, sorts []Sort) ([]RecordResponse, error
 	for i := len(sorts) - 1; i >= 0; i-- {
 		s := sorts[i]
 		sort.SliceStable(records, func(a, b int) bool {
-			var valA, valB any
-			for _, f := range records[a].Values {
-				if f.Key == s.Field {
-					valA = f.Value
-					break
-				}
-			}
-			for _, f := range records[b].Values {
-				if f.Key == s.Field {
-					valB = f.Value
-					break
-				}
-			}
+			valA := recordFieldValue(records[a], s.Field)
+			valB := recordFieldValue(records[b], s.Field)
 			less := compareValues(valA, valB)
 			if strings.EqualFold(s.Dir, "desc") {
 				return !less
@@ -120,6 +132,11 @@ func ApplySorts(records []RecordResponse, sorts []Sort) ([]RecordResponse, error
 }
 
 func compareValues(a, b any) bool {
+	if aTime, ok := a.(time.Time); ok {
+		if bTime, ok := b.(time.Time); ok {
+			return aTime.Before(bTime)
+		}
+	}
 	aFloat, aOk := toFloat64(a)
 	bFloat, bOk := toFloat64(b)
 	if aOk && bOk {

@@ -13,6 +13,14 @@ func makeRecord(id string, fields map[string]any) RecordResponse {
 	return r
 }
 
+func makeRecordWithTimes(id string, createdAt, updatedAt time.Time, fields map[string]any) RecordResponse {
+	r := RecordResponse{ID: id, CreatedAt: createdAt, UpdatedAt: updatedAt}
+	for k, v := range fields {
+		r.Values = append(r.Values, RecordField{Key: k, Value: v})
+	}
+	return r
+}
+
 // fieldValue returns the value for a key from a RecordResponse, or nil if absent.
 func fieldValue(r RecordResponse, key string) any {
 	for _, f := range r.Values {
@@ -130,6 +138,77 @@ func TestApplySorts_SortDirCaseInsensitive(t *testing.T) {
 	for i, w := range want {
 		if got := fieldValue(result[i], "score"); got != w {
 			t.Errorf("index %d: expected %v, got %v", i, w, got)
+		}
+	}
+}
+
+func TestApplySorts_SortByID(t *testing.T) {
+	records := []RecordResponse{
+		makeRecord("charlie", nil),
+		makeRecord("alice", nil),
+		makeRecord("bob", nil),
+	}
+	result, err := ApplySorts(records, []Sort{{Field: "id", Dir: "asc"}})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	wantIDs := []string{"alice", "bob", "charlie"}
+	for i, id := range wantIDs {
+		if result[i].ID != id {
+			t.Errorf("index %d: expected ID %q, got %q", i, id, result[i].ID)
+		}
+	}
+}
+
+func TestApplySorts_SortByCreatedAt(t *testing.T) {
+	base := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	records := []RecordResponse{
+		makeRecordWithTimes("1", base.Add(2*time.Hour), time.Time{}, nil),
+		makeRecordWithTimes("2", base, time.Time{}, nil),
+		makeRecordWithTimes("3", base.Add(time.Hour), time.Time{}, nil),
+	}
+	result, err := ApplySorts(records, []Sort{{Field: "created_at", Dir: "asc"}})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	wantIDs := []string{"2", "3", "1"}
+	for i, id := range wantIDs {
+		if result[i].ID != id {
+			t.Errorf("index %d: expected ID %q, got %q", i, id, result[i].ID)
+		}
+	}
+}
+
+func TestApplySorts_SortByUpdatedAtDesc(t *testing.T) {
+	base := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	records := []RecordResponse{
+		makeRecordWithTimes("1", time.Time{}, base.Add(time.Hour), nil),
+		makeRecordWithTimes("2", time.Time{}, base.Add(3*time.Hour), nil),
+		makeRecordWithTimes("3", time.Time{}, base.Add(2*time.Hour), nil),
+	}
+	result, err := ApplySorts(records, []Sort{{Field: "updated_at", Dir: "desc"}})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	wantIDs := []string{"2", "3", "1"}
+	for i, id := range wantIDs {
+		if result[i].ID != id {
+			t.Errorf("index %d: expected ID %q, got %q", i, id, result[i].ID)
+		}
+	}
+}
+
+func TestApplySorts_MetaFieldsNotAffectedByMissingCheck(t *testing.T) {
+	// Sorting by meta fields should never return a "field does not exist" error,
+	// even when records have no Values entries.
+	records := []RecordResponse{
+		makeRecord("1", nil),
+		makeRecord("2", nil),
+	}
+	for _, field := range []string{"id", "created_at", "updated_at"} {
+		_, err := ApplySorts(records, []Sort{{Field: field, Dir: "asc"}})
+		if err != nil {
+			t.Errorf("meta field %q: unexpected error: %v", field, err)
 		}
 	}
 }
