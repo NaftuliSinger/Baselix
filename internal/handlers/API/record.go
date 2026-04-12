@@ -1,6 +1,7 @@
 package apiHandlers
 
 import (
+	"baselix/internal/config"
 	"baselix/internal/db"
 	"baselix/internal/middleware"
 	"baselix/internal/models"
@@ -34,6 +35,37 @@ func CreateSingleOrMultipleRecords(c *gin.Context) {
 	records, err := utils.ParseRecordsBody(body)
 	if err != nil {
 		utils.ApiError(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Verify that the number of records in the request does not exceed the fixed limit - MaxRecordsPerPostRequest from ENV (e.g. 1000)
+	if utils.ExceedsRecordFixedLimit(records) {
+		utils.ApiError(c, http.StatusBadRequest, fmt.Sprintf("number of records in request body exceeds the maximum allowed limit of %d", config.Cfg.MaxRecordsPerPostRequest))
+		return
+	}
+
+	// user plan
+	plan := middleware.GetAPIPlan(c)
+
+	if plan == "" {
+		utils.ApiError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	// records_per_project limit
+	limit := config.GetPlanLimit(plan, "records_per_project", 0)
+
+	// get the total records for this project
+	totalRecordsInProject, err := db.CountRecordsByProjectID(c, project.ID)
+
+	// get the total count of values across all records in the request and return an error if it exceeds a certain limit (e.g. 10,000) to prevent abuse and protect the system from OOM crashes
+	totalValuesInRequest := utils.CountTotalValuesInRecords(records)
+
+	total := totalRecordsInProject + totalValuesInRequest
+
+	// get the user plan limits for max values per request
+	if total > limit {
+		utils.ApiError(c, http.StatusPaymentRequired, fmt.Sprintf("plan limits exceeded: total records in project (%d) + total values in request (%d) exceeds your plan limits (%d), please upgrade your plan to increase your limits", totalRecordsInProject, totalValuesInRequest, limit))
 		return
 	}
 

@@ -9,18 +9,19 @@ import (
 )
 
 type Config struct {
-	AppEnv              string
-	Localhost           bool
-	AppPort             string
-	Debug               bool
-	DB_DSN              string
-	MaxSelectLimit      int
-	CreateTables        bool
-	ClerkSecretKey      string
-	ClerkPublishableKey string
-	ClerkPublicKey      string
-	ROrigin             string
-	ClerkWebhookSecret  string
+	AppEnv                   string
+	Localhost                bool
+	AppPort                  string
+	Debug                    bool
+	DB_DSN                   string
+	MaxSelectLimit           int
+	CreateTables             bool
+	MaxRecordsPerPostRequest int
+	ClerkSecretKey           string
+	ClerkPublishableKey      string
+	ClerkPublicKey           string
+	ROrigin                  string
+	ClerkWebhookSecret       string
 }
 
 var Cfg *Config
@@ -35,18 +36,19 @@ func Init() {
 	}
 
 	Cfg = &Config{
-		AppEnv:              getEnv("APP_ENV", "development"),
-		Localhost:           getEnv("LOCALHOST", "false") == "true",
-		AppPort:             getEnv("APP_PORT", "8080"),
-		Debug:               debug,
-		DB_DSN:              getEnv("DB_DSN", ""),
-		MaxSelectLimit:      getEnvInt("MAX_SELECT_LIMIT", 1000),
-		CreateTables:        getEnv("CREATE_TABLES", "false") == "true",
-		ClerkSecretKey:      getEnv("CLERK_SECRET_KEY", ""),
-		ClerkPublishableKey: getEnv("CLERK_PUBLISHABLE_KEY", ""),
-		ClerkPublicKey:      getEnv("CLERK_PUBLIC_KEY", ""),
-		ROrigin:             getEnv("R_ORIGIN", "http://localhost:8080"),
-		ClerkWebhookSecret:  getEnv("CLERK_WEBHOOK_SECRET", ""),
+		AppEnv:                   getEnv("APP_ENV", "development"),
+		Localhost:                getEnv("LOCALHOST", "false") == "true",
+		AppPort:                  getEnv("APP_PORT", "8080"),
+		Debug:                    debug,
+		DB_DSN:                   getEnv("DB_DSN", ""),
+		MaxSelectLimit:           getEnvInt("MAX_SELECT_LIMIT", 1000),
+		CreateTables:             getEnv("CREATE_TABLES", "false") == "true",
+		MaxRecordsPerPostRequest: getEnvInt("MAX_RECORDS_PER_POST_REQUEST", 1000),
+		ClerkSecretKey:           getEnv("CLERK_SECRET_KEY", ""),
+		ClerkPublishableKey:      getEnv("CLERK_PUBLISHABLE_KEY", ""),
+		ClerkPublicKey:           getEnv("CLERK_PUBLIC_KEY", ""),
+		ROrigin:                  getEnv("R_ORIGIN", "http://localhost:8080"),
+		ClerkWebhookSecret:       getEnv("CLERK_WEBHOOK_SECRET", ""),
 	}
 
 	log.Println("Config loaded")

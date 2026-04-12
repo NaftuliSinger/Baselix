@@ -2,35 +2,29 @@
     "plans": {
         "free": {
             "limits": {
-                "records": 1000,
-                "storage_mb": 100
+                "projects": 2,
+                "records_per_project": 100
             },
             "features": [
-                "basic_support",
-                "community_access"
+                "basic_support"
             ]
         },
         "builder": {
             "limits": {
-                "records": 10000,
-                "storage_mb": 1024
+                "projects": 5,
+                "records_per_project": 1000
             },
             "features": [
-                "priority_support",
-                "custom_domains",
-                "api_access"
+                "priority_support"
             ]
         },
         "pro": {
             "limits": {
-                "records": 100000,
-                "storage_mb": 10240
+                "projects": 20,
+                "records_per_project": 100000
             },
             "features": [
-                "dedicated_support",
-                "custom_domains",
-                "api_access",
-                "analytics"
+                "dedicated_support"
             ]
         }
     }

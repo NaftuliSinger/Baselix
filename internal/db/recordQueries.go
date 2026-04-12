@@ -308,3 +308,11 @@ func DeleteRecordByID(ctx context.Context, projectID uuid.UUID, tableName string
 
 	return tx.Commit()
 }
+
+func CountRecordsByProjectID(ctx context.Context, projectID uuid.UUID) (int, error) {
+	count, err := DB.NewSelect().Model((*models.Record)(nil)).Where("project_id = ?", projectID).Count(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}

@@ -161,9 +161,11 @@ func UpdateTable(c *gin.Context) {
 		return
 	}
 
+	missingFlagMessage := "Warning, this route will perform destructive changes (refer to the API documentation for more details). Destructive changes are not allowed unless 'allow_destructive' is set to true in the request body"
+
 	allow_destructive := requestBody.AllowDestructive
 	if !allow_destructive {
-		utils.ApiError(c, http.StatusBadRequest, "Warning, this route will perform destructive changes (refer to the API documentation for more details). Destructive changes are not allowed without 'allow_destructive' flag set to true")
+		utils.ApiError(c, http.StatusBadRequest, missingFlagMessage)
 		return
 	}
 
@@ -206,6 +208,22 @@ func DeleteTable(c *gin.Context) {
 
 	// get table name from URL param
 	tableName := c.Param("name")
+
+	// access the json body of the request
+	var requestBody types.SchemaDeleteRequestBody
+
+	missingFlagMessage := "Warning, this route will perform destructive changes (refer to the API documentation for more details). Destructive changes are not allowed unless 'allow_destructive' is set to true in the request body"
+
+	if err := c.BindJSON(&requestBody); err != nil {
+		utils.ApiError(c, http.StatusBadRequest, "invalid request body, "+missingFlagMessage)
+		return
+	}
+
+	allow_destructive := requestBody.AllowDestructive
+	if !allow_destructive {
+		utils.ApiError(c, http.StatusBadRequest, missingFlagMessage)
+		return
+	}
 
 	err := db.DeleteTable(c, project.ID, tableName)
 

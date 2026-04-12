@@ -11,6 +11,10 @@ type SchemaRequestBody struct {
 	AllowDestructive bool           `json:"allow_destructive,omitempty"`
 }
 
+type SchemaDeleteRequestBody struct {
+	AllowDestructive bool `json:"allow_destructive,omitempty"`
+}
+
 type ProjectResponse struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`

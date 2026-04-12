@@ -56,6 +56,9 @@ func New() *gin.Engine {
 		records.GET("/:id", apiHandlers.GetRecordByID)
 
 		// Create single or multiple records (upsert-like behavior), inferring schema and creating table if needed
+
+		// Constraint by fixed limit - MaxRecordsPerPostRequest from ENV (e.g. 1000)
+		// Constraint by user plan limits
 		records.POST("", apiHandlers.CreateSingleOrMultipleRecords)
 
 		// Patch single or multiple records by ID, including partial updates
@@ -69,6 +72,8 @@ func New() *gin.Engine {
 	schema := v1.Group("/tables/:name/schema")
 	{
 		schema.GET("", apiHandlers.GetTable)
+
+		// Constraint by user plan limits
 		schema.POST("", apiHandlers.CreateTable)
 		schema.PUT("", apiHandlers.UpdateTable)
 		schema.DELETE("", apiHandlers.DeleteTable)

@@ -64,7 +64,7 @@ func GetPlanLimit(planName string, limitKey string, defaultValue int) int {
 	return value
 }
 
-func LimitHit(planName string, limitKey string, currentValue int) bool {
-	limit := GetPlanLimit(planName, limitKey, 0)
-	return currentValue >= limit
-}
+// func LimitHit(planName string, limitKey string, currentValue int) bool {
+// 	limit := GetPlanLimit(planName, limitKey, 0)
+// 	return currentValue >= limit
+// }
