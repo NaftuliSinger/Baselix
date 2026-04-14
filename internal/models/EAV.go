@@ -10,6 +10,7 @@ import (
 type Table struct {
 	bun.BaseModel `bun:"table:tables"`
 	ID            uuid.UUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()"`
+	CreatedAt     time.Time `bun:"created_at,notnull,default:current_timestamp"`
 
 	ProjectID uuid.UUID `bun:",type:uuid,notnull,unique:idx_project_name"` // part of composite unique
 

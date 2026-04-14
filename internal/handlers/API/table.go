@@ -138,7 +138,6 @@ func CreateTable(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":    "Table '" + tableName + "' created successfully for project '" + project.Name + "'",
-		"table_id":   newTable.ID,
 		"table_name": newTable.Name,
 	})
 }

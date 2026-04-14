@@ -1,4 +1,7 @@
 -- -- Distruction
+-- DROP TABLE users;
+-- DROP TABLE projects;
+
 -- -- EAV
 -- DROP TABLE public.tables;
 -- DROP TABLE fields;
