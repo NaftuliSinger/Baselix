@@ -137,7 +137,7 @@ func GetProjectsHTML(c *gin.Context) {
 
 	if err != nil {
 		utils.RenderHTML(c,
-			http.StatusInternalServerError,
+			http.StatusOK,
 			components.Message(
 				"Error fetching projects: "+err.Error(),
 				"error",
@@ -150,4 +150,26 @@ func GetProjectsHTML(c *gin.Context) {
 		http.StatusOK,
 		components.ProjectTable(projects),
 	)
+}
+
+// Delete a project by ID, give a warning about deleting all data and ask for confirmation
+func DeleteProjectHTML(c *gin.Context) {
+	projectID := c.Param("id")
+
+	if err := db.DeleteProjectByID(c, projectID); err != nil {
+		utils.RenderHTML(c,
+			http.StatusOK,
+			components.Message(
+				"Error deleting project: "+err.Error(),
+				"error",
+			))
+		return
+	}
+
+	utils.RenderHTML(c,
+		http.StatusOK,
+		components.Message(
+			"Project deleted successfully",
+			"success",
+		))
 }

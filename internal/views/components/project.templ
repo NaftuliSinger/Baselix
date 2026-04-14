@@ -135,11 +135,12 @@ templ ProjectTable(projects []*models.Project) {
                         <th class="px-4 py-2 font-medium">Name</th>
                         <th class="px-4 py-2 font-medium">Description</th>
                         <th class="px-4 py-2 font-medium"></th>
+                        <th class="px-4 py-2 font-medium"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y">
                     for _, project := range projects {
-                        <tr class="hover:bg-gray-50">
+                        <tr id={fmt.Sprintf("project-%s", project.ID)} class="hover:bg-gray-50">
                             <td class="px-4 py-2 font-medium text-gray-800">
                                 { project.Name }
                             </td>
@@ -155,6 +156,17 @@ templ ProjectTable(projects []*models.Project) {
                                     hx-confirm="Are you sure you want to rotate the API key? This will invalidate the current key immediately."
                                 >
                                     Rotate API Key
+                                </a>
+                            </td>
+                            <td class="px-4 py-2 text-right">
+                                <a 
+                                    class="text-red-600 text-sm font-medium hover:underline"
+                                    hx-delete={fmt.Sprintf("/projects/%s", project.ID)}
+                                    hx-target={fmt.Sprintf("#project-%s", project.ID)}
+                                    hx-swap="delete"
+                                    hx-confirm="Are you sure you want to delete this project? This will remove all associated data."
+                                >
+                                    Delete Project
                                 </a>
                             </td>
                         </tr>

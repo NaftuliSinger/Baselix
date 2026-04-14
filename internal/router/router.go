@@ -36,8 +36,7 @@ func New() *gin.Engine {
 	auth.POST("/projects/:id/rotate-key", htmlHandlers.RotateAPIKeyHTML)
 	auth.GET("/projects", htmlHandlers.GetProjectsHTML)
 
-	// Delete project route with confirmation
-	// auth.DELETE("/projects/:id", htmlHandlers.DeleteProjectHTML)
+	auth.DELETE("/projects/:id", htmlHandlers.DeleteProjectHTML)
 
 	// API routes
 	api := r.Group("/api")
