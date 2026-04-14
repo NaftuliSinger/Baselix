@@ -44,6 +44,10 @@ func CreateSingleOrMultipleRecords(c *gin.Context) {
 		return
 	}
 
+	/*
+		Checking user plan limits:
+	*/
+
 	// user plan
 	plan := middleware.GetAPIPlan(c)
 
@@ -63,7 +67,7 @@ func CreateSingleOrMultipleRecords(c *gin.Context) {
 
 	total := totalRecordsInProject + totalValuesInRequest
 
-	// get the user plan limits for max values per request
+	// final limit check
 	if total > limit {
 		utils.ApiError(c, http.StatusPaymentRequired, fmt.Sprintf("plan limits exceeded: total records in project (%d) + total values in request (%d) exceeds your plan limits (%d), please upgrade your plan to increase your limits", totalRecordsInProject, totalValuesInRequest, limit))
 		return

@@ -42,12 +42,10 @@ func UpdateProjectByID(ctx context.Context, project *models.Project) error {
 	return err
 }
 
-func CountProjectsByUserID(ctx context.Context, userID string) (int64, error) {
+func CountProjectsByUserID(ctx context.Context, userID string) (int, error) {
 	count, err := DB.NewSelect().Model((*models.Project)(nil)).Where("user_id = ?", userID).Count(ctx)
 	if err != nil {
 		return 0, err
 	}
-	// cast count to int64 to match the return type
-	countInt64 := int64(count)
-	return countInt64, nil
+	return count, nil
 }

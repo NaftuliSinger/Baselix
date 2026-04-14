@@ -1,8 +1,10 @@
 package htmlHandlers
 
 import (
+	"fmt"
 	"net/http"
 
+	"baselix/internal/config"
 	"baselix/internal/db"
 	"baselix/internal/middleware"
 	"baselix/internal/models"
@@ -25,8 +27,52 @@ func CreateProjectHTML(c *gin.Context) {
 		return
 	}
 
+	userID := middleware.GetUserID(c)
+
+	/*
+		Checking user plan limits:
+	*/
+
+	// Get user object
+	userObj, err := db.SelectUserByID(c, userID)
+	if err != nil {
+		utils.RenderHTML(c,
+			http.StatusOK,
+			components.Message(
+				"Error fetching user data: "+err.Error(),
+				"error",
+			))
+		return
+	}
+
+	// projects limit
+	limit := config.GetPlanLimit(userObj.Plan, "projects", 0)
+
+	// get total projects count for the user
+	totalProjects, err := db.CountProjectsByUserID(c, userID)
+	if err != nil {
+		utils.RenderHTML(c,
+			http.StatusOK,
+			components.Message(
+				"Error fetching projects count: "+err.Error(),
+				"error",
+			))
+		return
+	}
+
+	// final limit check
+	if totalProjects >= limit {
+		utils.RenderHTML(c,
+			http.StatusOK,
+			components.Message(
+				fmt.Sprintf("Project limit reached: you have %d projects which meets or exceeds your plan limit of %d, please upgrade your plan to increase your limits", totalProjects, limit),
+				"error",
+			))
+		return
+	}
+
 	// project.ID = uuid.New()
-	project.UserID = middleware.GetUserID(c) // assign the current user
+	project.UserID = userID // assign the current user
 
 	apiKey, apiHash, _ := utils.GenerateHashedAPIKey()
 	project.APIKeyHash = apiHash

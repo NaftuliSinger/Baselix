@@ -211,7 +211,7 @@ func UpdateRecordsByID(ctx context.Context, projectID uuid.UUID, tableName strin
 	_, err = tx.NewUpdate().
 		Model((*models.Record)(nil)).
 		Set("updated_at = ?", now).
-		Where("id IN (?) AND project_id = ?", bun.In(updatedRecordIDs), projectID).
+		Where(`"record"."id" IN (?) AND "record"."project_id" = ?`, bun.In(updatedRecordIDs), projectID).
 		Exec(ctx)
 	if err != nil {
 		return nil, err
@@ -224,7 +224,7 @@ func UpdateRecordsByID(ctx context.Context, projectID uuid.UUID, tableName strin
 	var records []*models.Record
 	err = DB.NewSelect().
 		Model(&records).
-		Where("id IN (?) AND project_id = ?", bun.In(updatedRecordIDs), projectID).
+		Where(`"record"."id" IN (?) AND "record"."project_id" = ?`, bun.In(updatedRecordIDs), projectID).
 		Relation("Values").
 		Relation("Values.Field").
 		Relation("Table").

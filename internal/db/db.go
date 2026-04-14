@@ -15,6 +15,21 @@ import (
 
 var DB *bun.DB
 
+type debugQueryHook struct{}
+
+func (h *debugQueryHook) BeforeQuery(ctx context.Context, event *bun.QueryEvent) context.Context {
+	return ctx
+}
+
+func (h *debugQueryHook) AfterQuery(_ context.Context, event *bun.QueryEvent) {
+	if config.Cfg.Debug {
+		log.Printf("[SQL] %s", event.Query)
+		if event.Err != nil {
+			log.Printf("[SQL ERR] %v", event.Err)
+		}
+	}
+}
+
 func Init(cfg *config.Config) {
 	dsn := cfg.DB_DSN
 
@@ -23,6 +38,7 @@ func Init(cfg *config.Config) {
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 
 	DB = bun.NewDB(sqldb, pgdialect.New())
+	DB.AddQueryHook(&debugQueryHook{})
 
 	if createTables {
 		if err := createSchema(context.Background()); err != nil {
