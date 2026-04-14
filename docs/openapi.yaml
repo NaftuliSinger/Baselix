@@ -1,0 +1,739 @@
+openapi: 3.0.3
+
+info:
+  title: Baselix API
+  version: 1.0.0
+  description: |
+    Public HTTP API for Baselix.
+
+    Base app URL: https://baselix.dev
+    Base API URL: https://baselix.dev/api/v1
+
+    All /api/v1 routes require a project API key passed as:
+
+    Authorization: Bearer <api_key>
+
+servers:
+  - url: https://baselix.dev
+    description: Baselix SaaS
+
+tags:
+  - name: System
+  - name: Tables
+  - name: Records
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: invalid request body
+
+    AutoCreateError:
+      type: object
+      required:
+        - message
+        - error
+        - details
+      properties:
+        message:
+          type: string
+          example: Table 'customers' created with inferred schema.
+        error:
+          type: integer
+          example: 400
+        details:
+          type: string
+          example: duplicate value: 'ada@example.com' for unique field: email
+
+    HealthResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: pong
+
+    SchemaObject:
+      type: object
+      additionalProperties:
+        type: string
+      example:
+        email: string_u
+        age: int
+        is_active: bool
+        joined_at: time
+        profile: json
+
+    TableSchema:
+      type: object
+      required:
+        - name
+        - fields
+      properties:
+        name:
+          type: string
+          example: customers
+        fields:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            email: string_u
+            age: int
+            is_active: bool
+            joined_at: time
+            profile: json
+
+    TablesListResponse:
+      type: object
+      required:
+        - tables
+      properties:
+        tables:
+          type: array
+          items:
+            $ref: '#/components/schemas/TableSchema'
+
+    TableResponse:
+      type: object
+      required:
+        - tables
+      properties:
+        tables:
+          $ref: '#/components/schemas/TableSchema'
+
+    CreateTableRequest:
+      type: object
+      required:
+        - schema
+      properties:
+        schema:
+          $ref: '#/components/schemas/SchemaObject'
+
+    UpdateTableRequest:
+      type: object
+      required:
+        - schema
+        - allow_destructive
+      properties:
+        schema:
+          $ref: '#/components/schemas/SchemaObject'
+        allow_destructive:
+          type: boolean
+          example: true
+
+    DeleteTableRequest:
+      type: object
+      required:
+        - allow_destructive
+      properties:
+        allow_destructive:
+          type: boolean
+          example: true
+
+    TableMutationResponse:
+      type: object
+      required:
+        - message
+        - table_name
+      properties:
+        message:
+          type: string
+        table_name:
+          type: string
+          example: customers
+
+    UpdateTableResponse:
+      type: object
+      required:
+        - message
+        - table_id
+        - table_name
+      properties:
+        message:
+          type: string
+        table_id:
+          type: string
+          format: uuid
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        table_name:
+          type: string
+          example: customers
+
+    DeleteTableResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: Table 'customers' deleted successfully for project 'my-project'
+
+    RecordObject:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        created_at:
+          type: string
+          format: date-time
+          example: 2026-04-14T12:00:00Z
+        updated_at:
+          type: string
+          format: date-time
+          example: 2026-04-14T12:00:00Z
+      additionalProperties: true
+      example:
+        id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        created_at: 2026-04-14T12:00:00Z
+        updated_at: 2026-04-14T12:00:00Z
+        email: ada@example.com
+        age: 34
+        is_active: true
+        joined_at: 2026-04-01T10:00:00Z
+        profile:
+          plan: pro
+          region: eu-west-1
+
+    CreateRecordBodySingle:
+      type: object
+      additionalProperties: true
+      example:
+        email: ada@example.com
+        age: 34
+        is_active: true
+        joined_at: 2026-04-01T10:00:00Z
+        profile:
+          plan: pro
+
+    CreateRecordBodyArray:
+      type: array
+      items:
+        type: object
+        additionalProperties: true
+      example:
+        - email: ada@example.com
+          age: 34
+          is_active: true
+        - email: grace@example.com
+          age: 29
+          is_active: false
+
+    RecordListResponse:
+      type: object
+      required:
+        - records
+      properties:
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordObject'
+
+    RecordSingleResponse:
+      type: object
+      required:
+        - records
+      properties:
+        records:
+          $ref: '#/components/schemas/RecordObject'
+
+    CreateRecordResponse:
+      type: object
+      required:
+        - records
+      properties:
+        message:
+          type: string
+          description: Present when the table was auto-created.
+          example: Table 'customers' created with inferred schema.
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordObject'
+
+    PatchRecordSingle:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          format: uuid
+      additionalProperties: true
+      example:
+        id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        is_active: false
+        profile:
+          plan: enterprise
+
+    PatchRecordArray:
+      type: array
+      items:
+        $ref: '#/components/schemas/PatchRecordSingle'
+
+    DeleteRecordResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: record deleted
+
+paths:
+  /ping:
+    get:
+      tags:
+        - System
+      summary: Health check
+      description: Public health-check endpoint.
+      security: []
+      responses:
+        '200':
+          description: Service is reachable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /api/v1/tables:
+    get:
+      tags:
+        - Tables
+      summary: List tables
+      description: Returns all tables for the authenticated project.
+      responses:
+        '200':
+          description: Tables returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TablesListResponse'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/tables/{name}/schema:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Table name.
+        example: customers
+
+    get:
+      tags:
+        - Tables
+      summary: Get table schema
+      responses:
+        '200':
+          description: Schema returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableResponse'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Table not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Tables
+      summary: Create table
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTableRequest'
+      responses:
+        '200':
+          description: Table created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableMutationResponse'
+        '400':
+          description: Invalid request, reserved field, or existing table.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error or invalid schema type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      tags:
+        - Tables
+      summary: Update table schema
+      description: |
+        Destructive operation. Use allow_destructive=true to confirm the change.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTableRequest'
+      responses:
+        '200':
+          description: Table updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateTableResponse'
+        '400':
+          description: Missing allow_destructive or invalid request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error or invalid schema type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Tables
+      summary: Delete table
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteTableRequest'
+      responses:
+        '200':
+          description: Table deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteTableResponse'
+        '400':
+          description: Missing or invalid allow_destructive payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Table not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/tables/{name}:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Table name.
+        example: customers
+
+    get:
+      tags:
+        - Records
+      summary: List records
+      parameters:
+        - name: filter
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Comma-separated filters in field:operator:value format.
+          example: joined_at:gte:2026-04-01T00:00:00Z
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Comma-separated sorts in field:direction format.
+          example: created_at:desc,email:asc
+      responses:
+        '200':
+          description: Records returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordListResponse'
+        '400':
+          description: Invalid filter, sort, or sort field.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Table not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Value coercion or other server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Records
+      summary: Create record or records
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/CreateRecordBodySingle'
+                - $ref: '#/components/schemas/CreateRecordBodyArray'
+      responses:
+        '201':
+          description: Records created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateRecordResponse'
+        '400':
+          description: Invalid body, reserved field, duplicate unique value, or too many records.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Error'
+                  - $ref: '#/components/schemas/AutoCreateError'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '402':
+          description: Plan limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Type mismatch or other server error.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Error'
+                  - $ref: '#/components/schemas/AutoCreateError'
+
+    patch:
+      tags:
+        - Records
+      summary: Update record or records
+      description: |
+        The current API accepts either a single object with id or an array of such objects.
+        Arrays are the safer client-side choice.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/PatchRecordSingle'
+                - $ref: '#/components/schemas/PatchRecordArray'
+      responses:
+        '200':
+          description: Records updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordListResponse'
+        '400':
+          description: Missing id, bad UUID, reserved field, or duplicate unique value.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Table or record not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Unknown field or other server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/tables/{name}/{id}:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Table name.
+        example: customers
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Record ID.
+        example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+
+    get:
+      tags:
+        - Records
+      summary: Get record by ID
+      responses:
+        '200':
+          description: Record returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordSingleResponse'
+        '400':
+          description: Invalid UUID.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Record not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Records
+      summary: Delete record by ID
+      responses:
+        '200':
+          description: Record deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteRecordResponse'
+        '400':
+          description: Invalid UUID.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Record not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

@@ -36,7 +36,7 @@ func ParseFilters(filterStr string) ([]Filter, error) {
 		// Validate operator is one of the supported ones, if not return an error
 		op := strings.ToLower(f[1])
 		switch op {
-		case "eq", "ne", "gt", "gte", "lt", "lte", "contains":
+		case "eq", "neq", "nq", "gt", "gte", "ge", "lt", "lte", "le", "contains":
 		default:
 			return nil, fmt.Errorf("invalid filter operator: %q", f[1])
 		}
