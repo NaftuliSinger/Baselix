@@ -153,7 +153,7 @@ templ ProjectTable(projects []*models.Project) {
                             </td>
                             <td class="px-4 py-2 text-right">
                                 <a 
-                                    class="text-indigo-600 text-sm font-medium hover:underline"
+                                    class="text-indigo-600 text-sm font-medium hover:underline cursor-pointer"
                                     hx-post={fmt.Sprintf("/projects/%s/rotate-key", project.ID)}
                                     hx-target="#modal-root"
                                     hx-swap="innerHTML"
