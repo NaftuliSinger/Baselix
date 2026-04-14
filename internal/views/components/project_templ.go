@@ -136,83 +136,70 @@ func ProjectTable(projects []*models.Project) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("project-%s", project.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/components/project.templ`, Line: 143, Col: 69}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/components/project.templ`, Line: 144, Col: 69}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" class=\"hover:bg-gray-50\"><td class=\"px-4 py-2 font-medium text-gray-800\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" class=\"hover:bg-gray-50\" x-data=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var7 string
-				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(project.Name)
+				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{ deleteOpen: false, deleteText: "", projectName: %q, projectId: %q }`, project.Name, project.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/components/project.templ`, Line: 145, Col: 46}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/components/project.templ`, Line: 146, Col: 146}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</td><td class=\"px-4 py-2 text-gray-500 font-mono text-xs\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\"><td class=\"px-4 py-2 font-medium text-gray-800\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var8 string
-				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(project.Description)
+				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(project.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/components/project.templ`, Line: 148, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/components/project.templ`, Line: 149, Col: 46}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</td><td class=\"px-4 py-2 text-right\"><a class=\"text-indigo-600 text-sm font-medium hover:underline\" hx-post=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</td><td class=\"px-4 py-2 text-gray-500 font-mono text-xs\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var9 string
-				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/projects/%s/rotate-key", project.ID))
+				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(project.Description)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/components/project.templ`, Line: 153, Col: 95}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/components/project.templ`, Line: 152, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "\" hx-target=\"#modal-root\" hx-swap=\"innerHTML\" hx-confirm=\"Are you sure you want to rotate the API key? This will invalidate the current key immediately.\">Rotate API Key</a></td><td class=\"px-4 py-2 text-right\"><a class=\"text-red-600 text-sm font-medium hover:underline\" hx-delete=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</td><td class=\"px-4 py-2 text-right\"><a class=\"text-indigo-600 text-sm font-medium hover:underline\" hx-post=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var10 string
-				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/projects/%s", project.ID))
+				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/projects/%s/rotate-key", project.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/components/project.templ`, Line: 164, Col: 86}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/components/project.templ`, Line: 157, Col: 95}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\" hx-target=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var11 string
-				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("#project-%s", project.ID))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/components/project.templ`, Line: 165, Col: 85}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" hx-swap=\"delete\" hx-confirm=\"Are you sure you want to delete this project? This will remove all associated data.\">Delete Project</a></td></tr>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\" hx-target=\"#modal-root\" hx-swap=\"innerHTML\" hx-confirm=\"Are you sure you want to rotate the API key? This will invalidate the current key immediately.\">Rotate API Key</a></td><td class=\"px-4 py-2 text-right\"><a class=\"text-red-600 text-sm font-medium hover:underline cursor-pointer\" @click=\"deleteOpen = true; deleteText = ''\">Delete Project</a></td><template x-teleport=\"body\"><div x-show=\"deleteOpen\" x-transition class=\"fixed inset-0 z-50 flex items-center justify-center\" @keydown.escape.window=\"deleteOpen = false\"><!-- Backdrop --><div class=\"absolute inset-0 bg-black/50 backdrop-blur-sm\" @click=\"deleteOpen = false\"></div><!-- Modal --><div class=\"relative bg-white w-full max-w-md mx-4 rounded-2xl shadow-xl p-6 space-y-5\" @click.stop><!-- Header --><div class=\"flex items-start gap-3\"><div class=\"flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center\"><svg class=\"w-5 h-5 text-red-600\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M12 9v2m0 4h.01M5.07 19h13.86A2 2 0 0021 16.27L14.14 5a2 2 0 00-3.28 0L3.93 16.27A2 2 0 005.07 19z\"></path></svg></div><div><h2 class=\"text-lg font-semibold text-gray-900\">Delete Project</h2><p class=\"text-sm text-gray-500 mt-1\">This action is <strong>permanent</strong> and cannot be undone. All tables, records, and data associated with this project will be destroyed.</p></div></div><!-- Confirmation input --><div class=\"space-y-2\"><p class=\"text-sm text-gray-700\">Type <span class=\"font-mono font-semibold text-red-600\" x-text=\"projectName\"></span> to confirm:</p><input type=\"text\" x-model=\"deleteText\" placeholder=\"Type project name to confirm\" class=\"w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300\" @keydown.enter=\"if (deleteText === projectName) { deleteOpen = false; htmx.ajax('DELETE', '/projects/' + projectId, { target: '#project-' + projectId, swap: 'delete' }) }\"></div><!-- Actions --><div class=\"flex justify-end gap-3\"><button type=\"button\" @click=\"deleteOpen = false\" class=\"px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50\">Cancel</button> <button type=\"button\" :disabled=\"deleteText !== projectName\" @click=\"deleteOpen = false; htmx.ajax('DELETE', '/projects/' + projectId, { target: '#project-' + projectId, swap: 'delete' })\" class=\"px-4 py-2 text-sm font-medium rounded-lg transition\" :class=\"deleteText === projectName ? 'bg-red-600 text-white hover:bg-red-700 cursor-pointer' : 'bg-red-200 text-red-400 cursor-not-allowed'\">Delete Project</button></div></div></div></template></tr>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</tbody></table></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</tbody></table></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
