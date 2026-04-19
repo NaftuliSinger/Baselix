@@ -44,7 +44,7 @@ func Footer() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " Baselix. All rights reserved.</div><!-- Footer Links --><ul class=\"flex space-x-4\"><li><a href=\"/terms\" class=\"hover:text-white transition-colors\">Terms</a></li><li><a href=\"/privacy\" class=\"hover:text-white transition-colors\">Privacy</a></li><li><a href=\"/contact\" class=\"hover:text-white transition-colors\">Contact</a></li><li><a href=\"/about\" class=\"hover:text-white transition-colors\">About</a></li></ul></div></footer>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " Baselix. All rights reserved.</div><!-- Footer Links --><ul class=\"flex space-x-4\"><li><a href=\"/terms\" class=\"hover:text-white transition-colors\">Terms</a></li><li><a href=\"/privacy\" class=\"hover:text-white transition-colors\">Privacy</a></li><li><a href=\"/about\" class=\"hover:text-white transition-colors\">About</a></li></ul></div></footer>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
