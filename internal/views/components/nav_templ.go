@@ -8,7 +8,7 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-func Nav() templ.Component {
+func PrimaryNavItems() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -29,7 +29,52 @@ func Nav() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<nav class=\"fixed top-0 z-50 w-full\"><div class=\"border-b border-amber-200 bg-amber-100 text-amber-950\"><div class=\"container mx-auto px-4 py-1.5 text-center text-xs font-medium sm:text-sm\">Baselix is in beta and still under active development. <a href=\"https://github.com/NaftuliSinger/Baselix/issues\" target=\"_blank\" rel=\"noreferrer\" class=\"ml-1 font-semibold underline decoration-2 underline-offset-2 transition-colors hover:text-amber-700\">Share feedback on GitHub</a></div></div><div class=\"bg-gray-900 shadow-md\"><div class=\"container mx-auto px-4 py-3 flex items-center justify-between\"><!-- Logo + Name as single home link --><a href=\"/\" class=\"flex items-center space-x-2\"><img src=\"/static/media/logo.ico\" alt=\"Baselix Logo\" class=\"h-8 w-8\"> <span class=\"text-white text-xl font-bold tracking-wide\">Baselix</span></a><!-- Navigation links --><ul class=\"flex items-center space-x-6\"><li><a href=\"/dashboard\" class=\"text-gray-300 hover:text-white transition-colors\">Dashboard</a></li><!-- Clerk Auth Area --><li id=\"clerk-auth-area\" class=\"flex items-center justify-center min-w-[100px] h-9\" style=\"visibility:hidden;\"><a id=\"clerk-sign-in-link\" href=\"/sign-in\" class=\"flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 rounded-lg text-sm font-semibold transition-colors h-9\">Sign In</a><div id=\"clerk-user-button\" class=\"flex items-center justify-center h-9\" style=\"display:none;\"></div></li></ul></div></div></nav>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<li><a href=\"/dashboard\" @click=\"mobileMenuOpen = false\" class=\"block rounded-lg px-3 py-2 text-sm font-medium text-gray-200 transition-colors hover:bg-gray-800 hover:text-white sm:inline sm:rounded-none sm:px-0 sm:py-0 sm:text-gray-300 sm:hover:bg-transparent sm:hover:text-white\">Dashboard</a></li>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func Nav() templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var2 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var2 == nil {
+			templ_7745c5c3_Var2 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<nav class=\"fixed top-0 z-50 w-full\" x-data=\"{ mobileMenuOpen: false }\" @keydown.escape.window=\"mobileMenuOpen = false\"><div class=\"border-b border-amber-200 bg-amber-100 text-amber-950\"><div class=\"container mx-auto px-4 py-1.5 text-center text-xs font-medium sm:text-sm\">Baselix is in beta and still under active development. <a href=\"https://github.com/NaftuliSinger/Baselix/issues\" target=\"_blank\" rel=\"noreferrer\" class=\"ml-1 font-semibold underline decoration-2 underline-offset-2 transition-colors hover:text-amber-700\">Share feedback on GitHub</a></div></div><div class=\"bg-gray-900 shadow-md\"><div class=\"container mx-auto px-4 py-3\"><div class=\"flex items-center justify-between gap-3\"><!-- Logo + Name as single home link --><a href=\"/\" class=\"flex items-center space-x-2\"><img src=\"/static/media/logo.ico\" alt=\"Baselix Logo\" class=\"h-8 w-8\"> <span class=\"text-white text-xl font-bold tracking-wide\">Baselix</span></a><!-- Desktop Navigation --><div class=\"hidden items-center sm:ml-auto sm:flex\"><ul class=\"flex items-center gap-6 sm:mr-3\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = PrimaryNavItems().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</ul></div><div class=\"flex items-center gap-2 sm:gap-3\"><button type=\"button\" class=\"inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-700 text-gray-200 transition-colors hover:border-gray-500 hover:text-white sm:hidden\" @click=\"mobileMenuOpen = !mobileMenuOpen\" :aria-expanded=\"mobileMenuOpen.toString()\" aria-controls=\"mobile-nav-menu\" aria-label=\"Toggle navigation menu\"><svg class=\"h-5 w-5\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"1.75\" aria-hidden=\"true\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M4 7h16M4 12h16M4 17h16\"></path></svg></button><!-- Clerk Auth Area --><div id=\"clerk-auth-area\" class=\"flex h-9 w-10 shrink-0 items-center justify-center\" style=\"visibility:hidden;\"><a id=\"clerk-sign-in-link\" href=\"/sign-in\" aria-label=\"Sign in\" class=\"flex h-9 w-10 items-center justify-center rounded-lg bg-indigo-600 text-white transition-colors hover:bg-indigo-700\"><svg class=\"h-4 w-4\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"1.75\" aria-hidden=\"true\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M15.75 6.75a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.118a7.5 7.5 0 0 1 15 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.5-1.632Z\"></path></svg> <span class=\"sr-only\">Sign In</span></a><div id=\"clerk-user-button\" class=\"flex h-9 w-10 items-center justify-center\" style=\"display:none;\"></div></div></div></div><!-- Mobile Navigation --><div class=\"pt-3 sm:hidden\" x-show=\"mobileMenuOpen\" x-transition.opacity.duration.150ms style=\"display:none;\"><ul id=\"mobile-nav-menu\" class=\"flex flex-col gap-1 rounded-xl border border-gray-800 bg-gray-950/95 p-2 shadow-lg\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = PrimaryNavItems().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</ul></div></div></div></nav>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
