@@ -23,14 +23,30 @@ templ Base(publishableKey string, content templ.Component) {
 			if (!window.Clerk || clerkLoaded) return;
 			clerkLoaded = true;
 
+			// Load Clerk
 			await window.Clerk.load();
+
+			// Ensure session is fully ready + cookie synced
+			if (window.Clerk.session) {
+				try {
+					await window.Clerk.session.getToken();
+				} catch (e) {
+					console.warn("Clerk session token fetch failed:", e);
+				}
+			}
 
 			const authArea = document.getElementById('clerk-auth-area');
 			const signInLink = document.getElementById('clerk-sign-in-link');
 			const userBtn = document.getElementById('clerk-user-button');
+			const protectedEl = document.getElementById('clerk-protected-page');
+			const signInEl = document.getElementById('clerk-sign-in');
 
-			if (window.Clerk.user) {
+			const isSignedIn = !!window.Clerk.session;
+
+			// ---- AUTH UI ----
+			if (isSignedIn) {
 				if (signInLink) signInLink.style.display = 'none';
+
 				if (userBtn) {
 					userBtn.style.display = 'flex';
 					userBtn.innerHTML = '';
@@ -41,23 +57,23 @@ templ Base(publishableKey string, content templ.Component) {
 				if (userBtn) userBtn.style.display = 'none';
 			}
 
-			// Reveal after state is determined — no flicker
-			if (authArea) authArea.style.visibility = 'visible';
-
-			// Protected page: just show/hide content, no redirects
-			const protectedEl = document.getElementById('clerk-protected-page');
+			// ---- PROTECTED CONTENT ----
 			if (protectedEl) {
-				protectedEl.style.opacity = window.Clerk.user ? '1' : '0';
-				protectedEl.style.pointerEvents = window.Clerk.user ? '' : 'none';
+				protectedEl.style.opacity = isSignedIn ? '1' : '0';
+				protectedEl.style.pointerEvents = isSignedIn ? '' : 'none';
 			}
 
-			// Sign-in element: mount without automatic redirect
-			const signInEl = document.getElementById('clerk-sign-in');
-			if (signInEl) {
-				signInEl.innerHTML = "";
+			// ---- SIGN-IN COMPONENT ----
+			if (signInEl && !isSignedIn) {
+				signInEl.innerHTML = '';
 				window.Clerk.mountSignIn(signInEl, {
-					fallbackRedirectUrl: "/dashboard"
+					fallbackRedirectUrl: "/dashboard",
 				});
+			}
+
+			// ---- REVEAL UI (no flicker) ----
+			if (authArea) {
+				authArea.style.visibility = 'visible';
 			}
 		}
 	</script>

@@ -3,6 +3,7 @@ package middleware
 import (
 	"baselix/internal/config"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -30,6 +31,9 @@ func RequireAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		cookie, err := c.Request.Cookie("__session")
 		if err != nil || cookie.Value == "" {
+			fmt.Println("No __session cookie found")
+			fmt.Println("Error:", err)
+
 			RedirectToSignIn(c)
 			return
 		}
@@ -92,6 +96,11 @@ func GetPlan(c *gin.Context) string {
 }
 
 func RedirectToSignIn(c *gin.Context) {
+	// clear cookies
+	for _, cookie := range c.Request.Cookies() {
+		c.SetCookie(cookie.Name, "", -1, "/", "", false, true)
+	}
+
 	c.Redirect(http.StatusFound, "/sign-in")
 	c.Abort()
 }
