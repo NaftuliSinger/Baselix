@@ -11,6 +11,12 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+var (
+	ErrNoSessionCookie = errors.New("no __session cookie")
+	ErrInvalidSession  = errors.New("invalid session token")
+	ErrInvalidOrigin   = errors.New("invalid session origin")
+)
+
 type ClerkClaims struct {
 	Sub string `json:"sub"`
 	Pla string `json:"pla"`
@@ -29,40 +35,16 @@ func RequireAuth() gin.HandlerFunc {
 	}
 
 	return func(c *gin.Context) {
-		cookie, err := c.Request.Cookie("__session")
-		if err != nil || cookie.Value == "" {
-			fmt.Println("No __session cookie found")
-			fmt.Println("Error:", err)
-
-			RedirectToSignIn(c)
-			return
-		}
-
-		tokenStr := cookie.Value
-
-		claims := &ClerkClaims{}
-		token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) {
-			if t.Method.Alg() != jwt.SigningMethodRS256.Alg() {
-				return nil, errors.New("unexpected signing method")
+		claims, err := ValidateSessionCookie(c.Request, pubKey)
+		if err != nil {
+			if errors.Is(err, ErrNoSessionCookie) {
+				fmt.Println("No __session cookie found")
+				fmt.Println("Error:", err)
+				RedirectToSignIn(c)
+				return
 			}
-			return pubKey, nil
-		})
-		if err != nil || !token.Valid {
-			RedirectToSignIn(c)
-			return
-		}
 
-		// Optional: check 'azp' claim
-		permittedOrigins := []string{config.Cfg.ROrigin} // your allowed azp
-		allowed := false
-		for _, o := range permittedOrigins {
-			if claims.Azp == o {
-				allowed = true
-				break
-			}
-		}
-		if !allowed {
-			RedirectToSignIn(c)
+			RedirectToSignInAndClearSession(c)
 			return
 		}
 
@@ -70,6 +52,30 @@ func RequireAuth() gin.HandlerFunc {
 		c.Set("claims", claims)
 		c.Next()
 	}
+}
+
+func ValidateSessionCookie(r *http.Request, pubKey interface{}) (*ClerkClaims, error) {
+	cookie, err := r.Cookie("__session")
+	if err != nil || cookie.Value == "" {
+		return nil, ErrNoSessionCookie
+	}
+
+	claims := &ClerkClaims{}
+	token, err := jwt.ParseWithClaims(cookie.Value, claims, func(t *jwt.Token) (interface{}, error) {
+		if t.Method.Alg() != jwt.SigningMethodRS256.Alg() {
+			return nil, errors.New("unexpected signing method")
+		}
+		return pubKey, nil
+	})
+	if err != nil || !token.Valid {
+		return nil, ErrInvalidSession
+	}
+
+	if claims.Azp != config.Cfg.ROrigin {
+		return nil, ErrInvalidOrigin
+	}
+
+	return claims, nil
 }
 
 // Helpers to access UID and Plan
@@ -96,6 +102,11 @@ func GetPlan(c *gin.Context) string {
 }
 
 func RedirectToSignIn(c *gin.Context) {
+	c.Redirect(http.StatusFound, "/sign-in")
+	c.Abort()
+}
+
+func RedirectToSignInAndClearSession(c *gin.Context) {
 	// clear cookies
 	for _, cookie := range c.Request.Cookies() {
 		c.SetCookie(cookie.Name, "", -1, "/", "", false, true)

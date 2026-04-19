@@ -1,0 +1,42 @@
+package pages
+
+templ AuthCallback() {
+	<div class="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-4 text-center">
+		<div class="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-indigo-600"></div>
+		<h1 class="text-2xl font-semibold text-gray-800">Finishing sign-in</h1>
+		<p id="auth-callback-status" class="text-sm text-gray-600">
+			Waiting for your session to be available...
+		</p>
+	</div>
+
+	<script>
+		(async function waitForSession() {
+			const statusEl = document.getElementById('auth-callback-status');
+			const maxAttempts = 20;
+
+			for (let attempt = 0; attempt < maxAttempts; attempt++) {
+				try {
+					const response = await fetch('/auth/status', {
+						credentials: 'same-origin',
+						cache: 'no-store',
+					});
+
+					if (response.ok) {
+						window.location.replace('/dashboard');
+						return;
+					}
+				} catch (error) {
+					console.warn('Auth status check failed:', error);
+				}
+
+				if (statusEl) {
+					statusEl.textContent = 'Waiting for your session to be available... (' + (attempt + 1) + '/' + maxAttempts + ')';
+				}
+
+				await new Promise((resolve) => setTimeout(resolve, 250));
+			}
+
+			window.location.replace('/sign-in');
+		})();
+	</script>
+}

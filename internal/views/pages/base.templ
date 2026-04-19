@@ -67,7 +67,7 @@ templ Base(publishableKey string, content templ.Component) {
 			if (signInEl && !isSignedIn) {
 				signInEl.innerHTML = '';
 				window.Clerk.mountSignIn(signInEl, {
-					fallbackRedirectUrl: "/dashboard",
+					fallbackRedirectUrl: "/auth/callback",
 				});
 			}
 

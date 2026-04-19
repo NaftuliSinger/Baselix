@@ -23,6 +23,8 @@ func New() *gin.Engine {
 	// Public routes
 	r.GET("/", htmlHandlers.Index)
 	r.GET("/sign-in", htmlHandlers.SignIn)
+	r.GET("/auth/callback", htmlHandlers.AuthCallback)
+	r.GET("/auth/status", htmlHandlers.AuthStatus)
 
 	// Webhook route (no auth)
 	r.POST("/clerk-webhook", webhookHandlers.SvixWebhook)
